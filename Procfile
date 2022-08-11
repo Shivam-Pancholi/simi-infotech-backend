@@ -1,1 +1,1 @@
-web: gunicorn siminfitech.wsgi
+web: gunicorn siminfotech.wsgi
