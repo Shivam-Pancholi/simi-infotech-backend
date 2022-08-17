@@ -23,12 +23,24 @@ def simidata(request):
     data = user.data
     resp = requests.get("http://simistocks.com/login/%s.json" % file_name)
     resp = resp.json().get("ENVELOPE")
-    if not data:
-        user.data = resp
-        user.save()
+    db_dict = {}
     for k, v in resp.items():
         v["id"] = k.split("_")[1]
-    return Response(list(resp.values()))
+        v["row"] = k
+        if db_dict.get(v.get('K1')):
+            db_dict.get(v.get('K1')).append(v)
+        else:
+            db_dict[v.get('K1')] = []
+            db_dict.get(v.get('K1')).append(v)
+        if data:
+            if data.get(v.get('K1')):
+                del data[v.get('K1')]
+    if not data:
+        user.data = db_dict
+    else:
+        user.data = data.update(db_dict)
+    user.save()
+    return Response(list(user.data.values()))
 
 
 class ObtainAuthToken(APIView):
@@ -98,3 +110,33 @@ def register(request):
     else:
         msg = "You don't have rights to perform this action"
     return Response(msg)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_users(request):
+    admin = User.objects.filter(id=request.user.id).last().is_superuser
+    if admin:
+        return Response(list(Userdata.objects.all().values("user__id", "user__first_name", "user__last_name",
+                                                           "user__is_active", "file_name", "user__email",
+                                                           "user__date_joined")))
+    else:
+        return Response("You don't have rights to perform this action")
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_user(request):
+    admin = User.objects.filter(id=request.user.id).last().is_superuser
+    if admin:
+        data = request.data
+        user = Userdata.objects.filter(user__id=data.get('id')).last()
+        user.user.first_name = data.get("first_name")
+        user.user.last_name = data.get("last_name")
+        user.user.is_active = data.get("is_active")
+        user.file_name = data.get("file_name")
+        user.user.email = data.get("email")
+        user.save()
+    else:
+        return Response("You don't have rights to perform this action")
+
