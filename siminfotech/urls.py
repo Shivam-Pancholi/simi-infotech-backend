@@ -16,9 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from simistocks import views
+from simistocks.views import register
 
 urlpatterns = [
     path('login/', views.obtain_auth_token),
     path('admin/', admin.site.urls),
+    path('register/', register),
     path('simistocks/', include('simistocks.urls'))
 ]

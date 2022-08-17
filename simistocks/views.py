@@ -1,4 +1,5 @@
 import requests
+from django.contrib.auth.models import User
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -78,7 +79,22 @@ class ObtainAuthToken(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key, 'admin': user.is_staff})
+        return Response({'token': token.key, 'admin': user.is_superuser})
 
 
 obtain_auth_token = ObtainAuthToken.as_view()
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def register(request):
+    admin = User.objects.filter(id=request.user.id).last().is_superuser
+    if admin:
+        user = User.objects.create(first_name=request.data.get("first_name"), last_name=request.data.get("last_name"),
+                                   email=request.data.get("email"), username=request.data.get("email"),
+                                   password=request.data.get("password"))
+        Userdata.objects.create(user=user, file_name=request.data.get("file_name"))
+        msg = "User Created Successfully"
+    else:
+        msg = "You don't have rights to perform this action"
+    return Response(msg)
