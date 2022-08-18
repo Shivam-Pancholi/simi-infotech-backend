@@ -13,6 +13,7 @@ from rest_framework.schemas import ManualSchema
 from rest_framework.schemas import coreapi as coreapi_schema
 from rest_framework.views import APIView
 import copy
+import json
 
 
 @api_view(['GET'])
@@ -141,6 +142,35 @@ def update_user(request):
         user.file_name = data.get("file_name")
         user.user.email = data.get("email")
         user.save()
+        return Response("Success")
     else:
         return Response("You don't have rights to perform this action")
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def simi_whatsapp(request):
+    data_dict = {}
+    url = "https://graph.facebook.com/v13.0/108124722012647/messages"
+    print(request.data)
+    print(request.data.get("phone_numbers"))
+    for numbers in request.data.get("phone_numbers"):
+        payload = json.dumps({
+          "messaging_product": "whatsapp",
+          "to": numbers,
+          "type": "template",
+          "template": {
+            "name": "hello_world",
+            "language": {
+              "code": "en_US"
+            }
+          }
+        })
+        headers = {
+          'Authorization': 'Bearer EAALGmTQb4BYBAL883PAhHqVqNLrLTmqqCrWZCPKcPZBNMQCyvo1a5J5yuwpgI3jZBAcN8rnOZCrv6qXK0b0L4DsY81qfZAUVCF78y0dRWGZCyfm5yjDectpcZBbOr2PVwu64VbfjMZCZCATzwGOkr5ffWBP3lAPVeaLi2NoJxKKiJqXJrz5kdvyLU5E1UmfDvSs38m8uyPKP2xgZDZD',
+          'Content-Type': 'application/json'
+        }
+
+        response = requests.request("POST", url, headers=headers, data=payload).json()
+        data_dict[numbers] = "success" if response.get("messages")[0].get("id") else "error"
+        return Response(data_dict)
