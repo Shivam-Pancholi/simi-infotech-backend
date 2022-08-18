@@ -135,13 +135,11 @@ def update_user(request):
     admin = User.objects.filter(id=request.user.id).last().is_superuser
     if admin:
         data = request.data
-        user = Userdata.objects.filter(user__id=data.get('id')).last()
-        user.user.first_name = data.get("first_name")
-        user.user.last_name = data.get("last_name")
-        user.user.is_active = data.get("is_active")
-        user.file_name = data.get("file_name")
-        user.user.email = data.get("email")
-        user.save()
+        user = Userdata.objects.filter(user__id=data.get('id')).update(user__first_name=data.get("first_name"),
+                                                                       user__last_name=data.get("last_name"),
+                                                                       user__is_active=data.get("is_active"),
+                                                                       file_name=data.get("file_name"),
+                                                                       user__email=data.get("email"))
         return Response("Success")
     else:
         return Response("You don't have rights to perform this action")
