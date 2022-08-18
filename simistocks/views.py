@@ -24,8 +24,7 @@ def simidata(request):
     resp = requests.get("http://simistocks.com/login/%s.json" % file_name)
     resp = resp.json().get("ENVELOPE")
     if resp == data.get("last_updated_data"):
-        print(True)
-        return Response(data.get("data").values())
+        return Response(sum(list(data.get("data").values()), []))
     db_dict = {}
     last_data = copy.deepcopy(resp)
     for k, v in resp.items():
@@ -43,10 +42,9 @@ def simidata(request):
         user.data = {"data": db_dict, "last_updated_data": resp}
     else:
         data.get("data").update(db_dict)
-        print("l", last_data)
         user.data = {"data": data.get("data"), "last_updated_data": last_data}
     user.save()
-    return Response(user.data.get("data").values())
+    return Response(sum(list(data.get("data").values()), []))
 
 
 class ObtainAuthToken(APIView):
