@@ -12,18 +12,22 @@ from rest_framework.response import Response
 from rest_framework.schemas import ManualSchema
 from rest_framework.schemas import coreapi as coreapi_schema
 from rest_framework.views import APIView
+import copy
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def simidata(request):
-    print(request.user.id)
     user = Userdata.objects.filter(user_id=request.user.id).first()
     file_name = user.file_name
     data = user.data
     resp = requests.get("http://simistocks.com/login/%s.json" % file_name)
     resp = resp.json().get("ENVELOPE")
+    if resp == data.get("last_updated_data"):
+        print(True)
+        return Response(list(data.get("data").values()))
     db_dict = {}
+    last_data = copy.deepcopy(resp)
     for k, v in resp.items():
         v["id"] = k.split("_")[1]
         v["row"] = k
@@ -33,14 +37,16 @@ def simidata(request):
             db_dict[v.get('K1')] = []
             db_dict.get(v.get('K1')).append(v)
         if data:
-            if data.get(v.get('K1')):
-                del data[v.get('K1')]
+            if data.get("data").get(v.get('K1')):
+                del data["data"][v.get('K1')]
     if not data:
-        user.data = db_dict
+        user.data = {"data": db_dict, "last_updated_data": resp}
     else:
-        user.data = data.update(db_dict)
+        data.get("data").update(db_dict)
+        print("l", last_data)
+        user.data = {"data": data.get("data"), "last_updated_data": last_data}
     user.save()
-    return Response(list(user.data.values()))
+    return Response(list(user.data.get("data").values()))
 
 
 class ObtainAuthToken(APIView):
