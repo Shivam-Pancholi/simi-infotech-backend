@@ -127,7 +127,7 @@ class ObtainAuthToken(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
-        templates = Userdata.objects.filter(user=user).last()
+        templates = Userdata.objects.filter(user=user).last().templates
         return Response({'token': token.key, 'admin': user.is_superuser, 'templates': templates})
 
 
@@ -201,7 +201,7 @@ def simi_whatsapp(request):
           "to": numbers,
           "type": "template",
           "template": {
-            "name": "hello_world",
+            "name": "%s" % request.data.get("template", "hello_world"),
             "language": {
               "code": "en_US"
             }
