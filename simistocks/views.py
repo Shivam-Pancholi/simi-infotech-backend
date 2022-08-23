@@ -142,7 +142,9 @@ def register(request):
                                    email=request.data.get("email"), username=request.data.get("email"))
         user.set_password(request.data.get("password"))
         user.save()
-        Userdata.objects.create(user=user, file_name=request.data.get("file_name"))
+        Userdata.objects.create(user=user, file_name=request.data.get("file_name"),
+                                whatsapp_phone_no_id=request.data.get("whatsapp_phone_no_id"),
+                                whatsapp_token=request.data.get("whatsapp_token"))
         msg = "User Created Successfully"
     else:
         msg = "You don't have rights to perform this action"
@@ -173,6 +175,8 @@ def update_user(request):
         user.user.is_active = data.get("is_active")
         user.file_name = data.get("file_name")
         user.user.email = data.get("email")
+        user.whatsapp_token = data.get("whatsapp_token")
+        user.whatsapp_phone_no_id = data.get("whatsapp_phone_no_id")
         user.user.save()
         user.save()
         return Response("Success")
@@ -184,7 +188,11 @@ def update_user(request):
 @permission_classes([IsAuthenticated])
 def simi_whatsapp(request):
     data_dict = {}
-    url = "https://graph.facebook.com/v13.0/108124722012647/messages"
+    data = request.data
+    user = Userdata.objects.filter(user__id=data.get('id')).last()
+    phone_id = user.whatsapp_phone_no_id
+    token = user.whatsapp_token
+    url = "https://graph.facebook.com/v13.0/%s/messages" % phone_id
     print(request.data)
     print(request.data.get("phone_numbers"))
     for numbers in request.data.get("phone_numbers"):
@@ -200,7 +208,7 @@ def simi_whatsapp(request):
           }
         })
         headers = {
-          'Authorization': 'Bearer EAALGmTQb4BYBAL883PAhHqVqNLrLTmqqCrWZCPKcPZBNMQCyvo1a5J5yuwpgI3jZBAcN8rnOZCrv6qXK0b0L4DsY81qfZAUVCF78y0dRWGZCyfm5yjDectpcZBbOr2PVwu64VbfjMZCZCATzwGOkr5ffWBP3lAPVeaLi2NoJxKKiJqXJrz5kdvyLU5E1UmfDvSs38m8uyPKP2xgZDZD',
+          'Authorization': 'Bearer %s' % token,
           'Content-Type': 'application/json'
         }
 
