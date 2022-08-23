@@ -12,53 +12,39 @@ from rest_framework.schemas import coreapi as coreapi_schema
 from rest_framework.views import APIView
 import copy
 import json
-from rest_framework import serializers
+# from rest_framework import serializers
 from django.contrib.auth.models import User
-from rest_framework.validators import UniqueValidator
-from django.contrib.auth.password_validation import validate_password
+# from rest_framework.validators import UniqueValidator
+# from django.contrib.auth.password_validation import validate_password
 
 
-class RegisterSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
-        required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())]
-    )
-
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
-    password2 = serializers.CharField(write_only=True, required=True)
-
-    class Meta:
-        model = User
-        fields = ('username', 'password', 'password2', 'email', 'first_name', 'last_name')
-        extra_kwargs = {
-            'first_name': {'required': True},
-            'last_name': {'required': True}
-        }
-
-    def validate(self, attrs):
-        if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError({"password": "Password fields didn't match."})
-
-        return attrs
-
-    def create(self, validated_data):
-        user = User.objects.create(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name']
-        )
-
-        user.set_password(validated_data['password'])
-        user.save()
-
-        return user
+# class RegisterSerializer(serializers.ModelSerializer):
+#     email = serializers.EmailField(
+#         required=True,
+#         validators=[UniqueValidator(queryset=User.objects.all())]
+#     )
+#
+#     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+#
+#     class Meta:
+#         model = User
+#         fields = ('username', 'password', 'email')
+#
+#     def create(self, validated_data):
+#         user = User.objects.create(
+#             username=validated_data['username'],
+#             email=validated_data['email'],
+#         )
+#         user.set_password(validated_data['password'])
+#         user.save()
+#
+#         return user
 
 
-class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    permission_classes = (AllowAny,)
-    serializer_class = RegisterSerializer
+# class RegisterView(generics.CreateAPIView):
+#     queryset = User.objects.all()
+#     permission_classes = (AllowAny,)
+#     serializer_class = RegisterSerializer
 
 
 @api_view(['GET'])
@@ -147,19 +133,20 @@ class ObtainAuthToken(APIView):
 obtain_auth_token = ObtainAuthToken.as_view()
 
 
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def register(request):
-#     admin = User.objects.filter(id=request.user.id).last().is_superuser
-#     if admin:
-#         user = User.objects.create(first_name=request.data.get("first_name"), last_name=request.data.get("last_name"),
-#                                    email=request.data.get("email"), username=request.data.get("email"),
-#                                    password=request.data.get("password"))
-#         Userdata.objects.create(user=user, file_name=request.data.get("file_name"))
-#         msg = "User Created Successfully"
-#     else:
-#         msg = "You don't have rights to perform this action"
-#     return Response(msg)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def register(request):
+    admin = User.objects.filter(id=request.user.id).last().is_superuser
+    if admin:
+        user = User.objects.create(first_name=request.data.get("first_name"), last_name=request.data.get("last_name"),
+                                   email=request.data.get("email"), username=request.data.get("email"))
+        user.set_password(request.data.get("password"))
+        user.save()
+        Userdata.objects.create(user=user, file_name=request.data.get("file_name"))
+        msg = "User Created Successfully"
+    else:
+        msg = "You don't have rights to perform this action"
+    return Response(msg)
 
 
 @api_view(['GET'])
