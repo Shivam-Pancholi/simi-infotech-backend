@@ -13,3 +13,5 @@ sqlparse==0.4.2
 tzdata==2022.1
 urllib3==1.26.10
 gunicorn
+dj-database-url 
+psycopg2
