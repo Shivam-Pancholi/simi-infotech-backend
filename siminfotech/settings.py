@@ -48,7 +48,7 @@ CORS_ALLOW_CREDENTIALS = True
 # 'access-control-allow-origin'
 # ]
 
-ALLOWED_HOSTS=['*']
+ALLOWED_HOSTS = ['*']
 # CORS_ORIGIN_WHITELIST = ["*"]
 
 REST_FRAMEWORK = {
