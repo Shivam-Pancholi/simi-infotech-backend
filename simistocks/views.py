@@ -156,7 +156,7 @@ def list_users(request):
     admin = User.objects.filter(id=request.user.id).last().is_superuser
     if admin:
         return Response(list(Userdata.objects.all().values("user__id", "user__is_active", "file_name", "user__email",
-                                                           "user__date_joined")))
+                                                           "user__date_joined", "whatsapp_phone_no_id", "whatsapp_token")))
     else:
         return Response("You don't have rights to perform this action")
 
