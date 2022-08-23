@@ -127,7 +127,8 @@ class ObtainAuthToken(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key, 'admin': user.is_superuser})
+        templates = Userdata.objects.filter(user=user).last()
+        return Response({'token': token.key, 'admin': user.is_superuser, 'templates': templates})
 
 
 obtain_auth_token = ObtainAuthToken.as_view()
@@ -143,7 +144,8 @@ def register(request):
         user.save()
         Userdata.objects.create(user=user, file_name=request.data.get("file_name"),
                                 whatsapp_phone_no_id=request.data.get("whatsapp_phone_no_id"),
-                                whatsapp_token=request.data.get("whatsapp_token"))
+                                whatsapp_token=request.data.get("whatsapp_token"),
+                                templates=request.data.get("templates", []))
         msg = "User Created Successfully"
     else:
         msg = "You don't have rights to perform this action"
@@ -156,7 +158,8 @@ def list_users(request):
     admin = User.objects.filter(id=request.user.id).last().is_superuser
     if admin:
         return Response(list(Userdata.objects.all().values("user__id", "user__is_active", "file_name", "user__email",
-                                                           "user__date_joined", "whatsapp_phone_no_id", "whatsapp_token")))
+                                                           "user__date_joined", "whatsapp_phone_no_id", "whatsapp_token",
+                                                           "templates")))
     else:
         return Response("You don't have rights to perform this action")
 
@@ -173,6 +176,7 @@ def update_user(request):
         user.user.email = data.get("email")
         user.whatsapp_token = data.get("whatsapp_token")
         user.whatsapp_phone_no_id = data.get("whatsapp_phone_no_id")
+        user.templates = data.get("templates")
         user.user.save()
         user.save()
         return Response("Success")

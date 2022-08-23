@@ -8,3 +8,4 @@ class Userdata(models.Model):
     data = models.JSONField(default=dict)
     whatsapp_phone_no_id = models.CharField(max_length=2048, null=True, blank=True)
     whatsapp_token = models.CharField(max_length=4096, null=True, blank=True)
+    templates = models.JSONField(default=list)
