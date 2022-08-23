@@ -138,8 +138,7 @@ obtain_auth_token = ObtainAuthToken.as_view()
 def register(request):
     admin = User.objects.filter(id=request.user.id).last().is_superuser
     if admin:
-        user = User.objects.create(first_name=request.data.get("first_name"), last_name=request.data.get("last_name"),
-                                   email=request.data.get("email"), username=request.data.get("email"))
+        user = User.objects.create(email=request.data.get("email"), username=request.data.get("email"))
         user.set_password(request.data.get("password"))
         user.save()
         Userdata.objects.create(user=user, file_name=request.data.get("file_name"),
@@ -156,8 +155,7 @@ def register(request):
 def list_users(request):
     admin = User.objects.filter(id=request.user.id).last().is_superuser
     if admin:
-        return Response(list(Userdata.objects.all().values("user__id", "user__first_name", "user__last_name",
-                                                           "user__is_active", "file_name", "user__email",
+        return Response(list(Userdata.objects.all().values("user__id", "user__is_active", "file_name", "user__email",
                                                            "user__date_joined")))
     else:
         return Response("You don't have rights to perform this action")
@@ -170,8 +168,6 @@ def update_user(request):
     if admin:
         data = request.data
         user = Userdata.objects.filter(user__id=data.get('id')).last()
-        user.user.first_name = data.get("first_name")
-        user.user.last_name = data.get("last_name")
         user.user.is_active = data.get("is_active")
         user.file_name = data.get("file_name")
         user.user.email = data.get("email")
