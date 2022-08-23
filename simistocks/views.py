@@ -185,7 +185,7 @@ def update_user(request):
 def simi_whatsapp(request):
     data_dict = {}
     data = request.data
-    user = Userdata.objects.filter(user__id=data.get('id')).last()
+    user = Userdata.objects.filter(user__id=request.user.id).last()
     phone_id = user.whatsapp_phone_no_id
     token = user.whatsapp_token
     url = "https://graph.facebook.com/v13.0/%s/messages" % phone_id
