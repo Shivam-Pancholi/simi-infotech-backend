@@ -209,5 +209,5 @@ def simi_whatsapp(request):
         }
 
         response = requests.request("POST", url, headers=headers, data=payload).json()
-        data_dict[numbers] = "success" if response.get("messages")[0].get("id") else "error"
-        return Response(data_dict)
+        data_dict[str(numbers)] = "success" if response.get("messages")[0].get("id") else "error"
+    return Response(data_dict)
