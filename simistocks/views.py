@@ -167,9 +167,18 @@ def list_users(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_user(request):
+    data = request.data
+    if data.get("delete", False):
+        Userdata.objects.filter(user__id=data.get('id')).delete()
+        User.objects.filter(id=data.get('id')).delete()
+        return Response("User has been deleted")
+    if data.get("password", ''):
+        user = User.objects.filter(id=data.get('id'))
+        user.set_password(data.get("password"))
+        user.save()
+        return Response("Password has been changed successfully")
     admin = User.objects.filter(id=request.user.id).last().is_superuser
     if admin:
-        data = request.data
         user = Userdata.objects.filter(user__id=data.get('id')).last()
         user.user.is_active = data.get("is_active")
         user.file_name = data.get("file_name")
@@ -198,7 +207,7 @@ def simi_whatsapp(request):
     for numbers in request.data.get("phone_numbers"):
         payload = json.dumps({
           "messaging_product": "whatsapp",
-          "to": numbers,
+          "to": int('91' + str(numbers)),
           "type": "template",
           "template": {
             "name": "%s" % request.data.get("template", "hello_world"),
