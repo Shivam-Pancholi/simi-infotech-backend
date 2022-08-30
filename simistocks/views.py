@@ -176,7 +176,7 @@ def update_user(request):
         user.user.email = data.get("email")
         user.whatsapp_token = data.get("whatsapp_token")
         user.whatsapp_phone_no_id = data.get("whatsapp_phone_no_id")
-        user.templates = data.get("templates")
+        user.templates = data.get("templates", [])
         user.user.save()
         user.save()
         return Response("Success")
