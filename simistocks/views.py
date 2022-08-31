@@ -57,7 +57,8 @@ def simidata(request):
     resp = requests.get("http://simistocks.com/login/%s.json" % file_name)
     resp = resp.json().get("ENVELOPE")
     if resp == data.get("last_updated_data"):
-        return Response(sum(list(data.get("data").values()), []))
+        data = dict(sorted(data.get("data").items(), key=lambda x: datetime.strptime(x[0], '%d-%m-%Y'), reverse=False))
+        return Response(sum(list(data.values()), []))
     db_dict = {}
     last_data = copy.deepcopy(resp)
     for k, v in resp.items():
