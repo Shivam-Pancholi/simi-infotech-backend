@@ -16,6 +16,7 @@ import json
 from django.contrib.auth.models import User
 # from rest_framework.validators import UniqueValidator
 # from django.contrib.auth.password_validation import validate_password
+from datetime import datetime
 
 
 # class RegisterSerializer(serializers.ModelSerializer):
@@ -76,7 +77,8 @@ def simidata(request):
         data.get("data").update(db_dict)
         user.data = {"data": data.get("data"), "last_updated_data": last_data}
     user.save()
-    return Response(sum(list(data.get("data").values()), []))
+    data = dict(sorted(data.get("data").items(), key=lambda x:datetime.strptime(x[0], '%d-%m-%Y'), reverse=False))
+    return Response(sum(list(data.values()), []))
 
 
 class ObtainAuthToken(APIView):
