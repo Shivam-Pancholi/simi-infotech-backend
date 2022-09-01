@@ -160,9 +160,9 @@ def register(request):
 def list_users(request):
     admin = User.objects.filter(id=request.user.id).last().is_superuser
     if admin:
-        return Response(list(Userdata.objects.all().values("user__id", "user__is_active", "file_name", "user__email",
-                                                           "user__date_joined", "whatsapp_phone_no_id", "whatsapp_token",
-                                                           "templates")))
+        return Response(list(Userdata.objects.filter(user__is_staff=False).values("user__id", "user__is_active", "file_name", "user__email",
+                                                                                  "user__date_joined", "whatsapp_phone_no_id", "whatsapp_token",
+                                                                                  "templates")))
     else:
         return Response("You don't have rights to perform this action")
 
@@ -176,7 +176,7 @@ def update_user(request):
         User.objects.filter(id=data.get('id')).delete()
         return Response("User has been deleted")
     if data.get("password", ''):
-        user = User.objects.filter(id=data.get('id'))
+        user = User.objects.filter(id=data.get('id')).last()
         user.set_password(data.get("password"))
         user.save()
         return Response("Password has been changed successfully")
