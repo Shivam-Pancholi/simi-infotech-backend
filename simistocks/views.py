@@ -226,23 +226,23 @@ def simi_whatsapp(request):
         if data.get("components")[0].get('type') == 'HEADER':
             types = data.get("components")[0].get(format)
             if types == 'TEXT':
-                template = {"name": "%s" % request.data.get("name"), "language": {"code": "%s" % request.data.get("language")},
-                            "components": [{"type": "header", "parameters": [{"type": "text", "text": request.data.get('text')}]}]}
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")},
+                            "components": [{"type": "header", "parameters": [{"type": "text", "text": data.get('text')}]}]}
             elif types == 'IMAGE':
-                template = {"name": "%s" % request.data.get("name"), "language": {"code": "%s" % request.data.get("language")},
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")},
                             "components": [{"type": "header", "parameters": [{"type": "image", "image": {
                                 "link": data_url}}]}]}
             elif types == 'VIDEO':
-                template = {"name": "%s" % request.data.get("name"), "language": {"code": "%s" % request.data.get("language")},
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")},
                             "components": [{"type": "header", "parameters": [{"type": "video", "video": {
                                 "link": data_url}}]}]}
             elif types == 'DOCUMENT':
-                template = {"name": "%s" % request.data.get("name"), "language": {"code": "%s" % request.data.get("language")},
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")},
                             "components": [{"type": "header", "parameters": [{"type": "document", "document": {
-                                "link": data_url, "filename": request.data.get('filename')}}]}
+                                "link": data_url, "filename": data.get('filename')}}]}
                                            ]}
             else:
-                template = {"name": "%s" % request.data.get("name"), "language": {"code": "%s" % request.data.get("language")}}
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")}}
     for numbers in request.data.get("phone_numbers"):
         payload = json.dumps({
           "messaging_product": "whatsapp",
@@ -267,6 +267,7 @@ def simi_whatsapp(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def templates(request):
     user = Userdata.objects.filter(user__id=request.user.id).last()
     whatsapp_account_id = user.whatsapp_account_id
