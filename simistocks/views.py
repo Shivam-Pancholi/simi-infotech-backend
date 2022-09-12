@@ -165,7 +165,7 @@ def list_users(request):
     if admin:
         return Response(list(Userdata.objects.filter(user__is_staff=False).values("user__id", "user__is_active", "file_name", "user__email",
                                                                                   "user__date_joined", "whatsapp_phone_no_id", "whatsapp_token",
-                                                                                  "whatsapp_account_id", "templates")))
+                                                                                  "whatsapp_account_id", "msg_limit")))
     else:
         return Response("You don't have rights to perform this action")
 
@@ -192,7 +192,7 @@ def update_user(request):
         user.whatsapp_token = data.get("whatsapp_token", "")
         user.whatsapp_account_id = data.get("whatsapp_account_id", "")
         user.whatsapp_phone_no_id = data.get("whatsapp_phone_no_id", "")
-        user.templates = data.get("templates", [])
+        user.msg_limit = data.get("msg_limit", [])
         user.user.save()
         user.save()
         return Response("Success")
