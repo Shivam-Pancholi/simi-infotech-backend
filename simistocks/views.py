@@ -211,10 +211,8 @@ def simi_whatsapp(request):
     token = user.whatsapp_token
     url = "https://graph.facebook.com/v13.0/%s/messages" % phone_id
     limit = user.msg_limit
-    if limit < request.data.get("phone_numbers"):
+    if limit < len(request.data.get("phone_numbers")):
         return Response("Sorry only %s msg is remaining" % limit)
-    print(request.data)
-    print(request.data.get("phone_numbers"))
     if request.data.get("image") or request.data.get("video") or request.data.get("document"):
         user = Userdata.objects.filter(user__id=request.user.id).last()
         print(user.template_img)
