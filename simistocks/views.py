@@ -1,5 +1,6 @@
 import requests
 from django.shortcuts import render
+import ast
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from simistocks.models import Userdata
@@ -219,7 +220,7 @@ def simi_whatsapp(request):
         user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
         user.save()
         data_url = "https://simiinfotech.herokuapp.com" + user.template_img.url
-    data = request.data.get("data")
+    data = json.loads(request.data.get("data"))
     if data.get("components"):
         if data.get("components")[0].get('type') == 'HEADER':
             types = data.get("components")[0].get("format")
@@ -241,7 +242,7 @@ def simi_whatsapp(request):
                                            ]}
             else:
                 template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")}}
-    for numbers in request.data.get("phone_numbers"):
+    for numbers in ast.literal_eval(request.data.get("phone_numbers")):
         payload = json.dumps({
           "messaging_product": "whatsapp",
           "to": int('91' + str(numbers)),
