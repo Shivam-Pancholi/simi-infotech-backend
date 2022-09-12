@@ -151,7 +151,7 @@ def register(request):
                                 whatsapp_phone_no_id=request.data.get("whatsapp_phone_no_id"),
                                 whatsapp_token=request.data.get("whatsapp_token"),
                                 whatsapp_account_id=request.data.get("whatsapp_account_id"),
-                                templates=request.data.get("templates", []))
+                                msg_limit=request.data.get("msg_limit", 1000))
         msg = "User Created Successfully"
     else:
         msg = "You don't have rights to perform this action"
