@@ -1,4 +1,5 @@
 import requests
+from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from simistocks.models import Userdata
@@ -17,7 +18,7 @@ from django.contrib.auth.models import User
 # from rest_framework.validators import UniqueValidator
 # from django.contrib.auth.password_validation import validate_password
 from datetime import datetime
-
+from rest_framework.parsers import MultiPartParser, FormParser
 
 # class RegisterSerializer(serializers.ModelSerializer):
 #     email = serializers.EmailField(
@@ -78,7 +79,7 @@ def simidata(request):
         data.get("data").update(db_dict)
         user.data = {"data": data.get("data"), "last_updated_data": last_data}
     user.save()
-    data = dict(sorted(data.get("data").items(), key=lambda x:datetime.strptime(x[0], '%d-%m-%Y'), reverse=False))
+    data = dict(sorted(data.get("data").items(), key=lambda x: datetime.strptime(x[0], '%d-%m-%Y'), reverse=False))
     return Response(sum(list(data.values()), []))
 
 
@@ -148,6 +149,7 @@ def register(request):
         Userdata.objects.create(user=user, file_name=request.data.get("file_name"),
                                 whatsapp_phone_no_id=request.data.get("whatsapp_phone_no_id"),
                                 whatsapp_token=request.data.get("whatsapp_token"),
+                                whatsapp_account_id=request.data.get("whatsapp_account_id"),
                                 templates=request.data.get("templates", []))
         msg = "User Created Successfully"
     else:
@@ -162,7 +164,7 @@ def list_users(request):
     if admin:
         return Response(list(Userdata.objects.filter(user__is_staff=False).values("user__id", "user__is_active", "file_name", "user__email",
                                                                                   "user__date_joined", "whatsapp_phone_no_id", "whatsapp_token",
-                                                                                  "templates")))
+                                                                                  "whatsapp_account_id", "templates")))
     else:
         return Response("You don't have rights to perform this action")
 
@@ -186,8 +188,9 @@ def update_user(request):
         user.user.is_active = data.get("is_active")
         user.file_name = data.get("file_name")
         user.user.email = data.get("email")
-        user.whatsapp_token = data.get("whatsapp_token")
-        user.whatsapp_phone_no_id = data.get("whatsapp_phone_no_id")
+        user.whatsapp_token = data.get("whatsapp_token", "")
+        user.whatsapp_account_id = data.get("whatsapp_account_id", "")
+        user.whatsapp_phone_no_id = data.get("whatsapp_phone_no_id", "")
         user.templates = data.get("templates", [])
         user.user.save()
         user.save()
@@ -199,25 +202,53 @@ def update_user(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def simi_whatsapp(request):
-    data_dict = {}
+    data_dict, template = {}, {}
     data = request.data
+    data_url = ""
+    limit_remaining = 0
     user = Userdata.objects.filter(user__id=request.user.id).last()
     phone_id = user.whatsapp_phone_no_id
     token = user.whatsapp_token
     url = "https://graph.facebook.com/v13.0/%s/messages" % phone_id
+    limit = user.msg_limit
+    if limit < request.data.get("phone_numbers"):
+        return Response("Sorry only %s msg is remaining" % limit)
     print(request.data)
     print(request.data.get("phone_numbers"))
+    if request.data.get("image") or request.data.get("video") or request.data.get("document"):
+        user = Userdata.objects.filter(user__id=request.user.id).last()
+        print(user.template_img)
+        user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
+        user.save()
+        data_url = "https://simiinfotech.herokuapp.com/" + user.template_img.url
+    data = request.data.get("data")
+    if data.get("components"):
+        if data.get("components")[0].get('type') == 'HEADER':
+            types = data.get("components")[0].get(format)
+            if types == 'TEXT':
+                template = {"name": "%s" % request.data.get("name"), "language": {"code": "%s" % request.data.get("language")},
+                            "components": [{"type": "header", "parameters": [{"type": "text", "text": request.data.get('text')}]}]}
+            elif types == 'IMAGE':
+                template = {"name": "%s" % request.data.get("name"), "language": {"code": "%s" % request.data.get("language")},
+                            "components": [{"type": "header", "parameters": [{"type": "image", "image": {
+                                "link": data_url}}]}]}
+            elif types == 'VIDEO':
+                template = {"name": "%s" % request.data.get("name"), "language": {"code": "%s" % request.data.get("language")},
+                            "components": [{"type": "header", "parameters": [{"type": "video", "video": {
+                                "link": data_url}}]}]}
+            elif types == 'DOCUMENT':
+                template = {"name": "%s" % request.data.get("name"), "language": {"code": "%s" % request.data.get("language")},
+                            "components": [{"type": "header", "parameters": [{"type": "document", "document": {
+                                "link": data_url, "filename": request.data.get('filename')}}]}
+                                           ]}
+            else:
+                template = {"name": "%s" % request.data.get("name"), "language": {"code": "%s" % request.data.get("language")}}
     for numbers in request.data.get("phone_numbers"):
         payload = json.dumps({
           "messaging_product": "whatsapp",
           "to": int('91' + str(numbers)),
           "type": "template",
-          "template": {
-            "name": "%s" % request.data.get("template", "hello_world"),
-            "language": {
-              "code": "en_US"
-            }
-          }
+          "template": template
         })
         headers = {
           'Authorization': 'Bearer %s' % token,
@@ -225,5 +256,21 @@ def simi_whatsapp(request):
         }
 
         response = requests.request("POST", url, headers=headers, data=payload).json()
-        data_dict[str(numbers)] = "success" if response.get("messages")[0].get("id") else "error"
+        if response.get("messages")[0].get("id"):
+            data_dict[str(numbers)] = "success"
+            limit_remaining = limit - 1
+        else:
+            data_dict[str(numbers)] = "error"
+    user.msg_limit = limit_remaining
+    user.save()
     return Response(data_dict)
+
+
+@api_view(['GET'])
+def templates(request):
+    user = Userdata.objects.filter(user__id=request.user.id).last()
+    whatsapp_account_id = user.whatsapp_account_id
+    token = user.whatsapp_token
+    url = "https://graph.facebook.com/v13.0/%s/message_templates?access_token=%s" % (whatsapp_account_id, token)
+    res = requests.get(url).json()
+    return Response({"data": res.get("data")})

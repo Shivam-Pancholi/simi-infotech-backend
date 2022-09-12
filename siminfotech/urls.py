@@ -17,10 +17,12 @@ from django.contrib import admin
 from django.urls import path, include
 from simistocks import views
 from simistocks.views import register
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('login/', views.obtain_auth_token),
     path('admin/', admin.site.urls),
     path('register/', register, name='auth_register'),
     path('simistocks/', include('simistocks.urls'))
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
