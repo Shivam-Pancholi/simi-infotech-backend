@@ -222,7 +222,7 @@ def simi_whatsapp(request):
     data = request.data.get("data")
     if data.get("components"):
         if data.get("components")[0].get('type') == 'HEADER':
-            types = data.get("components")[0].get(format)
+            types = data.get("components")[0].get("format")
             if types == 'TEXT':
                 template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")},
                             "components": [{"type": "header", "parameters": [{"type": "text", "text": data.get('text')}]}]}
