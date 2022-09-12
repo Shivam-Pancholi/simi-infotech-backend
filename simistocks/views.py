@@ -218,7 +218,7 @@ def simi_whatsapp(request):
         print(user.template_img)
         user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
         user.save()
-        data_url = "https://simiinfotech.herokuapp.com/" + user.template_img.url
+        data_url = "https://simiinfotech.herokuapp.com" + user.template_img.url
     data = request.data.get("data")
     if data.get("components"):
         if data.get("components")[0].get('type') == 'HEADER':
