@@ -59,7 +59,7 @@ def simidata(request):
     resp = requests.get("http://simistocks.com/login/%s.json" % file_name)
     resp = resp.json().get("ENVELOPE")
     if resp == data.get("last_updated_data"):
-        data = dict(sorted(data.get("data").items(), key=lambda x: datetime.strptime(x[0], '%d-%m-%Y'), reverse=False))
+        data = data.get("data")
         return Response(sum(list(data.values()), []))
     db_dict = {}
     last_data = copy.deepcopy(resp)
@@ -75,12 +75,13 @@ def simidata(request):
             if data.get("data").get(v.get('K1')):
                 del data["data"][v.get('K1')]
     if not data:
-        user.data = {"data": db_dict, "last_updated_data": resp}
+        data = dict(sorted(db_dict.items(), key=lambda x: datetime.strptime(x[0], '%d-%m-%Y'), reverse=False))
+        user.data = {"data": data, "last_updated_data": resp}
     else:
         data.get("data").update(db_dict)
-        user.data = {"data": data.get("data"), "last_updated_data": last_data}
+        data = dict(sorted(data.get("data").items(), key=lambda x: datetime.strptime(x[0], '%d-%m-%Y'), reverse=False))
+        user.data = {"data": data, "last_updated_data": last_data}
     user.save()
-    data = dict(sorted(data.get("data").items(), key=lambda x: datetime.strptime(x[0], '%d-%m-%Y'), reverse=False))
     return Response(sum(list(data.values()), []))
 
 
