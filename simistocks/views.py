@@ -195,7 +195,7 @@ def update_user(request):
         user.whatsapp_token = data.get("whatsapp_token", "")
         user.whatsapp_account_id = data.get("whatsapp_account_id", "")
         user.whatsapp_phone_no_id = data.get("whatsapp_phone_no_id", "")
-        user.msg_limit = data.get("msg_limit", [])
+        user.msg_limit = data.get("msg_limit", 1000)
         user.user.save()
         user.save()
         return Response("Success")
