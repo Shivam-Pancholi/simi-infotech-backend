@@ -133,8 +133,7 @@ class ObtainAuthToken(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
-        templates = Userdata.objects.filter(user=user).last().templates
-        return Response({'token': token.key, 'admin': user.is_superuser, 'templates': templates})
+        return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name})
 
 
 obtain_auth_token = ObtainAuthToken.as_view()
@@ -145,7 +144,8 @@ obtain_auth_token = ObtainAuthToken.as_view()
 def register(request):
     admin = User.objects.filter(id=request.user.id).last().is_superuser
     if admin:
-        user = User.objects.create(email=request.data.get("email"), username=request.data.get("email"))
+        user = User.objects.create(email=request.data.get("email"), username=request.data.get("email"),
+                                   first_name=request.data.get("name"))
         user.set_password(request.data.get("password"))
         user.save()
         Userdata.objects.create(user=user, file_name=request.data.get("file_name"),
@@ -166,7 +166,8 @@ def list_users(request):
     if admin:
         return Response(list(Userdata.objects.filter(user__is_staff=False).values("user__id", "user__is_active", "file_name", "user__email",
                                                                                   "user__date_joined", "whatsapp_phone_no_id", "whatsapp_token",
-                                                                                  "whatsapp_account_id", "msg_limit")))
+                                                                                  "whatsapp_account_id", "msg_limit",
+                                                                                  "user__first_name")))
     else:
         return Response("You don't have rights to perform this action")
 
@@ -190,6 +191,7 @@ def update_user(request):
         user.user.is_active = data.get("is_active")
         user.file_name = data.get("file_name")
         user.user.email = data.get("email")
+        user.user.first_name = data.get("name")
         user.whatsapp_token = data.get("whatsapp_token", "")
         user.whatsapp_account_id = data.get("whatsapp_account_id", "")
         user.whatsapp_phone_no_id = data.get("whatsapp_phone_no_id", "")
