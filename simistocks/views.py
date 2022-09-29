@@ -14,6 +14,7 @@ from rest_framework.schemas import coreapi as coreapi_schema
 from rest_framework.views import APIView
 import copy
 import json
+from django.core.cache import cache
 # from rest_framework import serializers
 from django.contrib.auth.models import User
 # from rest_framework.validators import UniqueValidator
@@ -259,12 +260,26 @@ def simi_whatsapp(request):
 
         response = requests.request("POST", url, headers=headers, data=payload).json()
         if response.get("messages")[0].get("id"):
-            data_dict[str(numbers)] = "success"
-            limit_remaining = limit - 1
+            if not cache.get("msg_%s_%s" % (phone_id, numbers)):
+                cache.set("msg_%s_%s" % (phone_id, numbers), "success", 60 * 60 * 24)
+                data_dict[str(numbers)] = "success"
+                limit_remaining = limit - 1
+                user.msg_limit = limit_remaining
+                user.save()
         else:
             data_dict[str(numbers)] = "error"
-    user.msg_limit = limit_remaining
-    user.save()
+        if data.get("free_field_msg", "") and response.get("messages")[0].get("id"):
+            payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
+                                  "type": "template", "template": {"name": "free_msgs", "language": {"code": "en_US"},
+                                                                   "components": [{"type": "body",
+                                                                                   "parameters": [{"type": "text",
+                                                                                                   "text": data.get("free_field_msg")}]}]
+                                                         }})
+            headers = {
+                'Authorization': 'Bearer %s' % token,
+                'Content-Type': 'application/json'
+            }
+            response = requests.request("POST", url, headers=headers, data=payload).json()
     return Response(data_dict)
 
 
