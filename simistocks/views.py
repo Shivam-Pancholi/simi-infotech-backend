@@ -276,7 +276,6 @@ def simi_whatsapp(request):
           'Authorization': 'Bearer %s' % token,
           'Content-Type': 'application/json'
         }
-
         response = requests.request("POST", url, headers=headers, data=payload).json()
         if response.get("messages")[0].get("id"):
             if not cache.get("msg_%s_%s" % (phone_id, numbers)):
@@ -303,7 +302,7 @@ def templates(request):
 
 @api_view(['GET'])
 def send_wp_msg(request):
-    user = Userdata.objects.filter(user__username=request.query_params.get('username')).last()
+    user = Userdata.objects.filter(user__username=str(request.query_params.get('username'))).last()
     if user:
         payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(request.query_params.get('to_send'))),
                               "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
@@ -329,4 +328,5 @@ def send_wp_msg(request):
                 user.save()
         else:
             return Response('ERROR')
-    return Response('SUCCESS')
+        return Response('SUCCESS')
+    return Response('ERROR')
