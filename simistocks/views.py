@@ -211,7 +211,7 @@ def simi_whatsapp(request):
     data = request.data
     data_url = ""
     limit_remaining = 0
-    user = Userdata.objects.filter(user__id=request.user.id).last()
+    user = Userdata.objects.filter(user__id=20).last()
     phone_id = user.whatsapp_phone_no_id
     token = user.whatsapp_token
     url = "https://graph.facebook.com/v13.0/%s/messages" % phone_id
@@ -253,7 +253,7 @@ def simi_whatsapp(request):
                                       "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
                                                                        "components": [{"type": "body",
                                                                                        "parameters": [{"type": "text",
-                                                                                                       "text": data.get("free_field_msg")}]}]
+                                                                                                       "text": request.data.get("free_field_msg")}]}]
                                                          }})
             else:
                 payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
@@ -262,7 +262,7 @@ def simi_whatsapp(request):
                                                    "components": [{"type": "header", "parameters": [{"type": "image",
                                                                                                      "image": {"link": data_url}}]},
                                                                   {"type": "body", "parameters": [{"type": "text",
-                                                                                                   "text": data.get(
+                                                                                                   "text": request.data.get(
                                                                                                        "free_field_msg")}]}]
                                                    }})
         else:
