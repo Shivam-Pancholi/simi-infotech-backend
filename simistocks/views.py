@@ -302,8 +302,9 @@ def templates(request):
 
 @api_view(['GET'])
 def send_wp_msg(request):
-    user = Userdata.objects.filter(user__username=str(request.query_params.get('username'))).last()
-    if user:
+    data = {"username": request.query_params.get('username'), "password": request.query_params.get('password')}
+    res = requests.post("https://simiinfotech.herokuapp.com/login/", json=data)
+    if res.json().get("token"):
         payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(request.query_params.get('to_send'))),
                               "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
                                                                "components": [{"type": "body",
@@ -311,6 +312,7 @@ def send_wp_msg(request):
                                                                                                "text": request.query_params.get(
                                                                                                    "message")}]}]
                                                                }})
+        user = Userdata.objects.filter(user__username=request.query_params.get('username')).last()
         phone_id = user.whatsapp_phone_no_id
         token = user.whatsapp_token
         limit = user.msg_limit
