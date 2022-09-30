@@ -211,7 +211,7 @@ def simi_whatsapp(request):
     data = request.data
     data_url = ""
     limit_remaining = 0
-    user = Userdata.objects.filter(user__id=20).last()
+    user = Userdata.objects.filter(user__id=request.user.id).last()
     phone_id = user.whatsapp_phone_no_id
     token = user.whatsapp_token
     url = "https://graph.facebook.com/v13.0/%s/messages" % phone_id
