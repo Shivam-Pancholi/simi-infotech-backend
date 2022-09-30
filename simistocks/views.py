@@ -225,7 +225,7 @@ def simi_whatsapp(request):
         user.save()
         data_url = "https://simiinfotech.herokuapp.com" + user.template_img.url
     data = json.loads(request.data.get("data"))
-    if data.get("components"):
+    if data.get("components") and data.get("name") not in ["only_text", "text_with_image"]:
         if data.get("components")[0].get('type') == 'HEADER':
             types = data.get("components")[0].get("format")
             if types == 'TEXT':
@@ -247,12 +247,31 @@ def simi_whatsapp(request):
             else:
                 template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")}}
     for numbers in ast.literal_eval(request.data.get("phone_numbers")):
-        payload = json.dumps({
-          "messaging_product": "whatsapp",
-          "to": int('91' + str(numbers)),
-          "type": "template",
-          "template": template
-        })
+        if data.get("name") in ["only_text", "text_with_image"]:
+            if data.get("name") == "only_text":
+                payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
+                                      "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
+                                                                       "components": [{"type": "body",
+                                                                                       "parameters": [{"type": "text",
+                                                                                                       "text": data.get("free_field_msg")}]}]
+                                                         }})
+            else:
+                payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
+                                      "type": "template",
+                                      "template": {"name": "text_with_image", "language": {"code": "en_US"},
+                                                   "components": [{"type": "header", "parameters": [{"type": "image",
+                                                                                                     "image": {"link": data_url}}]},
+                                                                  {"type": "body", "parameters": [{"type": "text",
+                                                                                                   "text": data.get(
+                                                                                                       "free_field_msg")}]}]
+                                                   }})
+        else:
+            payload = json.dumps({
+              "messaging_product": "whatsapp",
+              "to": int('91' + str(numbers)),
+              "type": "template",
+              "template": template
+            })
         headers = {
           'Authorization': 'Bearer %s' % token,
           'Content-Type': 'application/json'
@@ -268,18 +287,6 @@ def simi_whatsapp(request):
                 user.save()
         else:
             data_dict[str(numbers)] = "error"
-        if data.get("free_field_msg", "") and response.get("messages")[0].get("id"):
-            payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
-                                  "type": "template", "template": {"name": "free_msgs", "language": {"code": "en_US"},
-                                                                   "components": [{"type": "body",
-                                                                                   "parameters": [{"type": "text",
-                                                                                                   "text": data.get("free_field_msg")}]}]
-                                                         }})
-            headers = {
-                'Authorization': 'Bearer %s' % token,
-                'Content-Type': 'application/json'
-            }
-            response = requests.request("POST", url, headers=headers, data=payload).json()
     return Response(data_dict)
 
 
@@ -292,3 +299,36 @@ def templates(request):
     url = "https://graph.facebook.com/v13.0/%s/message_templates?access_token=%s" % (whatsapp_account_id, token)
     res = requests.get(url).json()
     return Response({"data": res.get("data")})
+
+
+@api_view(['GET'])
+def send_wp_msg(request):
+    data = {"username": request.query_params.get('username'), "password": request.query_params.get('password')}
+    res = requests.post("https://simiinfotech.herokuapp.com/login/", json=data)
+    if res.json().get("token"):
+        payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(request.query_params.get('to_send'))),
+                              "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
+                                                               "components": [{"type": "body",
+                                                                               "parameters": [{"type": "text",
+                                                                                               "text": data.get(
+                                                                                                   "message")}]}]
+                                                               }})
+        user = Userdata.objects.filter(user__username=request.query_params.get('username')).last()
+        phone_id = user.whatsapp_phone_no_id
+        token = user.whatsapp_token
+        limit = user.msg_limit
+        url = "https://graph.facebook.com/v13.0/%s/messages" % phone_id
+        headers = {
+            'Authorization': 'Bearer %s' % token,
+            'Content-Type': 'application/json'
+        }
+        response = requests.request("POST", url, headers=headers, data=payload).json()
+        if response.get("messages")[0].get("id"):
+            if not cache.get("msg_%s_%s" % (phone_id, request.query_params.get('to_send'))):
+                cache.set("msg_%s_%s" % (phone_id, request.query_params.get('to_send')), "success", 60 * 60 * 24)
+                limit_remaining = limit - 1
+                user.msg_limit = limit_remaining
+                user.save()
+        else:
+            return Response('ERROR')
+    return Response('SUCCESS')
