@@ -219,7 +219,7 @@ def simi_whatsapp(request):
     print(ast.literal_eval(request.data.get("phone_numbers")))
     print(type(ast.literal_eval(request.data.get("phone_numbers"))))
     print(len(ast.literal_eval(request.data.get("phone_numbers"))))
-    if limit < len(list(request.data.get("phone_numbers"))):
+    if limit < len(ast.literal_eval(request.data.get("phone_numbers"))):
         return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("phone_numbers"))) )
     if request.data.get("image") or request.data.get("video") or request.data.get("document"):
         user = Userdata.objects.filter(user__id=request.user.id).last()
