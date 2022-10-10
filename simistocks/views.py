@@ -208,7 +208,6 @@ def update_user(request):
 @permission_classes([IsAuthenticated])
 def simi_whatsapp(request):
     data_dict, template = {}, {}
-    data = request.data
     data_url = ""
     limit_remaining = 0
     user = Userdata.objects.filter(user__id=request.user.id).last()
@@ -220,7 +219,7 @@ def simi_whatsapp(request):
     print(type(ast.literal_eval(request.data.get("phone_numbers"))))
     print(len(ast.literal_eval(request.data.get("phone_numbers"))))
     if limit < len(ast.literal_eval(request.data.get("phone_numbers"))):
-        return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("phone_numbers"))) )
+        return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("phone_numbers"))))
     if request.data.get("image") or request.data.get("video") or request.data.get("document"):
         user = Userdata.objects.filter(user__id=request.user.id).last()
         print(user.template_img)
@@ -335,3 +334,49 @@ def send_wp_msg(request):
             return Response('ERROR')
         return Response('SUCCESS')
     return Response('ERROR')
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def delete_data(request):
+    user = Userdata.objects.filter(user__id=request.user.id).last()
+    user.data = {}
+    user.save()
+    return Response('SUCCESS')
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def exchane_wp_msg(request):
+    data_dict = {}
+    user = Userdata.objects.filter(user__id=request.user.id).last()
+    phone_id = user.whatsapp_phone_no_id
+    token = user.whatsapp_token
+    url = "https://graph.facebook.com/v13.0/%s/messages" % phone_id
+    limit = user.msg_limit
+    if limit < len(request.data):
+        return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("phone_numbers"))))
+    for user in request.data:
+        numbers = user.get("K5")
+        payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
+                              "type": "template", "template": {"name": "", "language": {"code": "en_US"},
+                                                               "components": [{"type": "body",
+                                                                               "parameters": [{"type": "text",
+                                                                                               "text": request.data.get(
+                                                                                                   "exchange_value")}]}]
+                                                               }})
+        headers = {
+            'Authorization': 'Bearer %s' % token,
+            'Content-Type': 'application/json'
+        }
+        response = requests.request("POST", url, headers=headers, data=payload).json()
+        if response.get("messages")[0].get("id"):
+            if not cache.get("msg_%s_%s" % (phone_id, numbers)):
+                cache.set("msg_%s_%s" % (phone_id, numbers), "success", 60 * 60 * 24)
+                data_dict[str(numbers)] = "success"
+                limit_remaining = limit - 1
+                user.msg_limit = limit_remaining
+                user.save()
+        else:
+            data_dict[str(numbers)] = "error"
+    return Response(data_dict)
