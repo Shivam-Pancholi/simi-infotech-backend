@@ -378,5 +378,6 @@ def exchane_wp_msg(request):
                 user.msg_limit = limit_remaining
                 user.save()
         else:
+            print("yes")
             data_dict[str(numbers)] = "error"
     return Response(data_dict)
