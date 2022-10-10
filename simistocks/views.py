@@ -342,7 +342,7 @@ def delete_data(request):
     user = Userdata.objects.filter(user__id=request.user.id).last()
     user.data = {}
     user.save()
-    return Response('SUCCESS')
+    return Response(user.data)
 
 
 @api_view(['POST'])
