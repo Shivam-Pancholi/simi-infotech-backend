@@ -250,6 +250,7 @@ def simi_whatsapp(request):
                 template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")}}
     for numbers in ast.literal_eval(request.data.get("phone_numbers")):
         if data.get("name") in ["only_text", "text_with_image"]:
+            print(request.data)
             if data.get("name") == "only_text":
                 payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
                                       "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
