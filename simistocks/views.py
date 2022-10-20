@@ -303,36 +303,33 @@ def templates(request):
 
 @api_view(['GET'])
 def send_wp_msg(request):
-    data = {"username": request.query_params.get('username'), "password": request.query_params.get('password')}
-    res = requests.post("https://king-prawn-app-4zv54.ondigitalocean.app/login/", json=data)
-    if res.json().get("token"):
-        payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(request.query_params.get('to_send'))),
-                              "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
-                                                               "components": [{"type": "body",
-                                                                               "parameters": [{"type": "text",
-                                                                                               "text": request.query_params.get(
-                                                                                                   "message")}]}]
-                                                               }})
-        user = Userdata.objects.filter(user__username=request.query_params.get('username')).last()
-        phone_id = user.whatsapp_phone_no_id
-        token = user.whatsapp_token
-        limit = user.msg_limit
-        url = "https://graph.facebook.com/v15.0/%s/messages" % phone_id
-        headers = {
-            'Authorization': 'Bearer %s' % token,
-            'Content-Type': 'application/json'
-        }
-        response = requests.request("POST", url, headers=headers, data=payload).json()
-        if response.get("messages")[0].get("id"):
-            if not cache.get("msg_%s_%s" % (phone_id, request.query_params.get('to_send'))):
-                cache.set("msg_%s_%s" % (phone_id, request.query_params.get('to_send')), "success", 60 * 60 * 24)
-                limit_remaining = limit - 1
-                user.msg_limit = limit_remaining
-                user.save()
-        else:
-            return Response('ERROR')
-        return Response('SUCCESS')
-    return Response('ERROR')
+    payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(request.query_params.get('receiverMobileNo'))),
+                          "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
+                                                           "components": [{"type": "body",
+                                                                           "parameters": [{"type": "text",
+                                                                                           "text": request.query_params.get(
+                                                                                               "message")}]}]
+                                                           }})
+    request.query_params.get('username')
+    user = Userdata.objects.filter(user__username="kapil").last()
+    phone_id = user.whatsapp_phone_no_id
+    token = user.whatsapp_token
+    limit = user.msg_limit
+    url = "https://graph.facebook.com/v15.0/%s/messages" % phone_id
+    headers = {
+        'Authorization': 'Bearer %s' % token,
+        'Content-Type': 'application/json'
+    }
+    response = requests.request("POST", url, headers=headers, data=payload).json()
+    if response.get("messages")[0].get("id"):
+        if not cache.get("msg_%s_%s" % (phone_id, request.query_params.get('receiverMobileNo'))):
+            cache.set("msg_%s_%s" % (phone_id, request.query_params.get('receiverMobileNo')), "success", 60 * 60 * 24)
+            limit_remaining = limit - 1
+            user.msg_limit = limit_remaining
+            user.save()
+    else:
+        return Response('ERROR')
+    return Response('SUCCESS')
 
 
 @api_view(['POST'])
