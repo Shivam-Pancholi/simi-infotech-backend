@@ -246,9 +246,6 @@ def simi_whatsapp(request):
                 template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")}}
     for numbers in ast.literal_eval(request.data.get("phone_numbers")):
         if data.get("name") in ["only_text", "text_with_image"]:
-            print(request.data)
-            print(numbers)
-            print(int('91' + str(numbers)))
             if data.get("name") == "only_text":
                 payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
                                       "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
@@ -278,7 +275,6 @@ def simi_whatsapp(request):
           'Content-Type': 'application/json'
         }
         response = requests.request("POST", url, headers=headers, data=payload).json()
-        print(response)
         if response.get("messages")[0].get("id"):
             if not cache.get("msg_%s_%s" % (phone_id, numbers)):
                 cache.set("msg_%s_%s" % (phone_id, numbers), "success", 60 * 60 * 24)
@@ -286,6 +282,10 @@ def simi_whatsapp(request):
                 limit_remaining = limit - 1
                 user.msg_limit = limit_remaining
                 user.save()
+                user.template_img.delete()
+            else:
+                data_dict[str(numbers)] = "success"
+                user.template_img.delete()
         else:
             data_dict[str(numbers)] = "error"
     return Response(data_dict)
@@ -378,6 +378,5 @@ def exchane_wp_msg(request):
                 user.msg_limit = limit_remaining
                 user.save()
         else:
-            print("yes")
             data_dict[str(numbers)] = "error"
     return Response(data_dict)
