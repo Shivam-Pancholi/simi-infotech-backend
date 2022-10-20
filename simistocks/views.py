@@ -282,10 +282,8 @@ def simi_whatsapp(request):
                 limit_remaining = limit - 1
                 user.msg_limit = limit_remaining
                 user.save()
-                user.template_img.delete()
             else:
                 data_dict[str(numbers)] = "success"
-                user.template_img.delete()
         else:
             data_dict[str(numbers)] = "error"
     return Response(data_dict)
