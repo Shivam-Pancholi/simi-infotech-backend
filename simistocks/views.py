@@ -304,7 +304,7 @@ def templates(request):
 @api_view(['GET'])
 def send_wp_msg(request):
     data = {"username": request.query_params.get('username'), "password": request.query_params.get('password')}
-    res = requests.post("https://simiinfotech.herokuapp.com/login/", json=data)
+    res = requests.post("https://king-prawn-app-4zv54.ondigitalocean.app/login/", json=data)
     if res.json().get("token"):
         payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(request.query_params.get('to_send'))),
                               "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
