@@ -213,19 +213,15 @@ def simi_whatsapp(request):
     user = Userdata.objects.filter(user__id=request.user.id).last()
     phone_id = user.whatsapp_phone_no_id
     token = user.whatsapp_token
-    url = "https://graph.facebook.com/v13.0/%s/messages" % phone_id
+    url = "https://graph.facebook.com/v15.0/%s/messages" % phone_id
     limit = user.msg_limit
-    print(ast.literal_eval(request.data.get("phone_numbers")))
-    print(type(ast.literal_eval(request.data.get("phone_numbers"))))
-    print(len(ast.literal_eval(request.data.get("phone_numbers"))))
     if limit < len(ast.literal_eval(request.data.get("phone_numbers"))):
         return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("phone_numbers"))))
     if request.data.get("image") or request.data.get("video") or request.data.get("document"):
         user = Userdata.objects.filter(user__id=request.user.id).last()
-        print(user.template_img)
         user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
         user.save()
-        data_url = "https://simiinfotech.herokuapp.com" + user.template_img.url
+        data_url = "https://king-prawn-app-4zv54.ondigitalocean.app/" + user.template_img.url
     data = json.loads(request.data.get("data"))
     if data.get("components") and data.get("name") not in ["only_text", "text_with_image"]:
         if data.get("components")[0].get('type') == 'HEADER':
@@ -251,6 +247,8 @@ def simi_whatsapp(request):
     for numbers in ast.literal_eval(request.data.get("phone_numbers")):
         if data.get("name") in ["only_text", "text_with_image"]:
             print(request.data)
+            print(numbers)
+            print(int('91' + str(numbers)))
             if data.get("name") == "only_text":
                 payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
                                       "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
@@ -280,6 +278,7 @@ def simi_whatsapp(request):
           'Content-Type': 'application/json'
         }
         response = requests.request("POST", url, headers=headers, data=payload).json()
+        print(response)
         if response.get("messages")[0].get("id"):
             if not cache.get("msg_%s_%s" % (phone_id, numbers)):
                 cache.set("msg_%s_%s" % (phone_id, numbers), "success", 60 * 60 * 24)
@@ -298,7 +297,7 @@ def templates(request):
     user = Userdata.objects.filter(user__id=request.user.id).last()
     whatsapp_account_id = user.whatsapp_account_id
     token = user.whatsapp_token
-    url = "https://graph.facebook.com/v13.0/%s/message_templates?access_token=%s" % (whatsapp_account_id, token)
+    url = "https://graph.facebook.com/v15.0/%s/message_templates?access_token=%s" % (whatsapp_account_id, token)
     res = requests.get(url).json()
     return Response({"data": res.get("data")})
 
@@ -319,7 +318,7 @@ def send_wp_msg(request):
         phone_id = user.whatsapp_phone_no_id
         token = user.whatsapp_token
         limit = user.msg_limit
-        url = "https://graph.facebook.com/v13.0/%s/messages" % phone_id
+        url = "https://graph.facebook.com/v15.0/%s/messages" % phone_id
         headers = {
             'Authorization': 'Bearer %s' % token,
             'Content-Type': 'application/json'
@@ -353,7 +352,7 @@ def exchane_wp_msg(request):
     user = Userdata.objects.filter(user__id=request.user.id).last()
     phone_id = user.whatsapp_phone_no_id
     token = user.whatsapp_token
-    url = "https://graph.facebook.com/v13.0/%s/messages" % phone_id
+    url = "https://graph.facebook.com/v15.0/%s/messages" % phone_id
     limit = user.msg_limit
     if limit < len(request.data):
         return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("phone_numbers"))))
