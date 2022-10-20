@@ -219,6 +219,7 @@ def simi_whatsapp(request):
         return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("phone_numbers"))))
     if request.data.get("image") or request.data.get("video") or request.data.get("document"):
         user = Userdata.objects.filter(user__id=request.user.id).last()
+        user.template_img.delete()
         user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
         user.save()
         data_url = "https://king-prawn-app-4zv54.ondigitalocean.app/" + user.template_img.url
