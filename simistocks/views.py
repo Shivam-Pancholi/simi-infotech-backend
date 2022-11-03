@@ -224,7 +224,7 @@ def simi_whatsapp(request):
         user.save()
         data_url = "https://king-prawn-app-4zv54.ondigitalocean.app/" + user.template_img.url
     data = json.loads(request.data.get("data"))
-    if data.get("components") and data.get("name") not in ["only_text", "text_with_image"]:
+    if data.get("components") and data.get("name") not in ["only_text", "text_with_image", "text_button_image"]:
         if data.get("components")[0].get('type') == 'HEADER':
             types = data.get("components")[0].get("format")
             if types == 'TEXT':
