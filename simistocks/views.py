@@ -246,7 +246,7 @@ def simi_whatsapp(request):
             else:
                 template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")}}
     for numbers in ast.literal_eval(request.data.get("phone_numbers")):
-        if data.get("name") in ["only_text", "text_with_image"]:
+        if data.get("name") in ["only_text", "text_with_image", "text_button_image"]:
             if data.get("name") == "only_text":
                 payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
                                       "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
@@ -257,7 +257,7 @@ def simi_whatsapp(request):
             else:
                 payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
                                       "type": "template",
-                                      "template": {"name": "text_with_image", "language": {"code": "en_US"},
+                                      "template": {"name": data.get("name"), "language": {"code": "en_US"},
                                                    "components": [{"type": "header", "parameters": [{"type": "image",
                                                                                                      "image": {"link": data_url}}]},
                                                                   {"type": "body", "parameters": [{"type": "text",
