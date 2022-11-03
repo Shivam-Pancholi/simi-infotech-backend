@@ -276,15 +276,17 @@ def simi_whatsapp(request):
           'Content-Type': 'application/json'
         }
         response = requests.request("POST", url, headers=headers, data=payload).json()
-        if response.get("messages")[0].get("id"):
-            if not cache.get("msg_%s_%s" % (phone_id, numbers)):
-                cache.set("msg_%s_%s" % (phone_id, numbers), "success", 60 * 60 * 24)
-                data_dict[str(numbers)] = "success"
-                limit_remaining = limit - 1
-                user.msg_limit = limit_remaining
-                user.save()
-            else:
-                data_dict[str(numbers)] = "success"
+        if response.get("messages"):
+            if response.get("messages")[0]:
+                if response.get("messages")[0].get("id", ""):
+                    if not cache.get("msg_%s_%s" % (phone_id, numbers)):
+                        cache.set("msg_%s_%s" % (phone_id, numbers), "success", 60 * 60 * 24)
+                        data_dict[str(numbers)] = "success"
+                        limit_remaining = limit - 1
+                        user.msg_limit = limit_remaining
+                        user.save()
+                    else:
+                        data_dict[str(numbers)] = "success"
         else:
             data_dict[str(numbers)] = "error"
     return Response(data_dict)
