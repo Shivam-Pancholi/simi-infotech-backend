@@ -307,8 +307,12 @@ def templates(request):
 def send_wp_msg(request):
     username = request.query_params.get('username')
     password = request.query_params.get('password')
+    headers = {
+        'Content-Type': 'application/json'
+    }
     payload = json.dumps({"username": username, "password": password})
-    response = requests.request("POST", 'https://king-prawn-app-4zv54.ondigitalocean.app/login/', data=payload).json()
+    response = requests.request("POST", 'https://king-prawn-app-4zv54.ondigitalocean.app/login/',headers=headers,
+                                data=payload).json()
     if not response.get("token"):
         return Response('Invalid Credentials')
     number_list = request.query_params.get('receiverMobileNo').split(',')
