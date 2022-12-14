@@ -305,20 +305,22 @@ def templates(request):
 
 @api_view(['GET'])
 def send_wp_msg(request):
-    username = request.query_params.get('username')
-    password = request.query_params.get('password')
-    print(username, password)
-    url = "https://king-prawn-app-4zv54.ondigitalocean.app/login/"
-    payload = json.dumps({
-        "username": username,
-        "password": password
-    })
-    headers = {
-        'Content-Type': 'application/json'
-    }
-    response = requests.request("POST", url, headers=headers, data=payload).json()
-    print(response)
-    if not response.get("token"):
+    # username = request.query_params.get('username')
+    # password = request.query_params.get('password')
+    # print(username, password)
+    # url = "https://king-prawn-app-4zv54.ondigitalocean.app/login/"
+    # payload = json.dumps({
+    #     "username": username,
+    #     "password": password
+    # })
+    # headers = {
+    #     'Content-Type': 'application/json'
+    # }
+    # response = requests.request("POST", url, headers=headers, data=payload).json()
+    # print(response)
+    user = Userdata.objects.filter(user__username=request.query_params.get('username'),
+                                   whatsapp_phone_no_id=request.query_params.get('token')).last()
+    if not user:
         return Response('Invalid Credentials')
     number_list = request.query_params.get('receiverMobileNo').split(',')
     for number in number_list:
@@ -338,7 +340,6 @@ def send_wp_msg(request):
                                                                                                    "text": request.query_params.get(
                                                                                                        "message")}]}]
                                                                    }})
-        user = Userdata.objects.filter(user__username=request.query_params.get('username')).last()
         phone_id = user.whatsapp_phone_no_id
         token = user.whatsapp_token
         limit = user.msg_limit
