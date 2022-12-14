@@ -305,17 +305,31 @@ def templates(request):
 
 @api_view(['GET'])
 def send_wp_msg(request):
+    username = request.query_params.get('username')
+    password = request.query_params.get('password')
+    payload = json.dumps({"username": username, "password": password})
+    response = requests.request("POST", 'https://king-prawn-app-4zv54.ondigitalocean.app/login/', data=payload).json()
+    if not response.get("token"):
+        return Response('Invalid Credentials')
     number_list = request.query_params.get('receiverMobileNo').split(',')
     for number in number_list:
-        payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),
-                              "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
-                                                               "components": [{"type": "body",
-                                                                               "parameters": [{"type": "text",
-                                                                                               "text": request.query_params.get(
-                                                                                                   "message")}]}]
-                                                               }})
-        request.query_params.get('username')
-        user = Userdata.objects.filter(user__username="kapil").last()
+        if request.query_params.get('file'):
+            payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),"type": "template","template":
+                {"name":"files", "language": {"code": "en_US"}, "components": [{"type": "header",
+                                                                               "parameters": [{"type": "document",
+                                                                                               "document":
+                                                                                                   {"link": request.query_params.get('file')}}]},
+                                                                              {"type": "body", "parameters": [{"type": "text","text": request.query_params.get(
+                                                                                                       "message", "Please find your attachment above")}]}]}})
+        else:
+            payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),
+                                  "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
+                                                                   "components": [{"type": "body",
+                                                                                   "parameters": [{"type": "text",
+                                                                                                   "text": request.query_params.get(
+                                                                                                       "message")}]}]
+                                                                   }})
+        user = Userdata.objects.filter(user__username=request.query_params.get('username')).last()
         phone_id = user.whatsapp_phone_no_id
         token = user.whatsapp_token
         limit = user.msg_limit
@@ -347,7 +361,7 @@ def delete_data(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def exchane_wp_msg(request):
+def exchange_wp_msg(request):
     data_dict = {}
     user = Userdata.objects.filter(user__id=request.user.id).last()
     phone_id = user.whatsapp_phone_no_id
