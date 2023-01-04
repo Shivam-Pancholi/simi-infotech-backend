@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from simistocks.views import simidata, list_users, update_user, simi_whatsapp, templates, send_wp_msg, delete_data, \
-    exchange_wp_msg
+    exchange_wp_msg, simi_reply_p, simi_reply
 
 urlpatterns = [
     path('simidata', simidata),
@@ -11,5 +11,7 @@ urlpatterns = [
     path('templates', templates),
     path('send_wp_msg', send_wp_msg),
     path('delete_data', delete_data),
-    path('exchange_wp_msg', exchange_wp_msg)
+    path('exchange_wp_msg', exchange_wp_msg),
+    path('simi_reply', simi_reply),
+    path('simi_reply_p', simi_reply_p)
 ]

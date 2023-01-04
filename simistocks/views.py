@@ -404,3 +404,15 @@ def exchange_wp_msg(request):
         else:
             data_dict[str(numbers)] = "error"
     return Response(data_dict)
+
+
+@api_view(['GET'])
+def simi_reply(request):
+    print(request)
+    return Response("Success")
+
+
+@api_view(['POST'])
+def simi_reply_p(request):
+    print(request.data)
+    return Response("Success")
