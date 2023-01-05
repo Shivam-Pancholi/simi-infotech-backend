@@ -11,7 +11,5 @@ urlpatterns = [
     path('templates', templates),
     path('send_wp_msg', send_wp_msg),
     path('delete_data', delete_data),
-    path('exchange_wp_msg', exchange_wp_msg),
-    path('simi_reply', simi_reply),
-    path('simi_reply_p', simi_reply_p)
+    path('exchange_wp_msg', exchange_wp_msg)
 ]

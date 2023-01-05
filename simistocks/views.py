@@ -380,13 +380,13 @@ def exchange_wp_msg(request):
     limit = user.msg_limit
     if limit < len(request.data):
         return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("phone_numbers"))))
-    for user in request.data:
-        numbers = user.get("K5")
+    for users in request.data:
+        numbers = users.get("K5")
         payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
                               "type": "template", "template": {"name": "", "language": {"code": "en_US"},
                                                                "components": [{"type": "body",
                                                                                "parameters": [{"type": "text",
-                                                                                               "text": request.data.get(
+                                                                                               "text": users.get(
                                                                                                    "exchange_value")}]}]
                                                                }})
         headers = {
@@ -404,15 +404,3 @@ def exchange_wp_msg(request):
         else:
             data_dict[str(numbers)] = "error"
     return Response(data_dict)
-
-
-@api_view(['GET'])
-def simi_reply(request):
-    print(request)
-    return Response("Success")
-
-
-@api_view(['POST'])
-def simi_reply_p(request):
-    print(request.data)
-    return Response("Success")
