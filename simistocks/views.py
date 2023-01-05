@@ -386,8 +386,8 @@ def exchange_wp_msg(request):
                               "type": "template", "template": {"name": "", "language": {"code": "en_US"},
                                                                "components": [{"type": "body",
                                                                                "parameters": [{"type": "text",
-                                                                                               "text": users.get(
-                                                                                                   "exchange_value")}]}]
+                                                                                               "text": "Your %s exchange value is %s /n/n Visit our store now" % (users.get("K5"), users.get(
+                                                                                                   "exchange_value"))}]}]
                                                                }})
         headers = {
             'Authorization': 'Bearer %s' % token,
