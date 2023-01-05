@@ -386,7 +386,7 @@ def exchange_wp_msg(request):
                               "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
                                                                "components": [{"type": "body",
                                                                                "parameters": [{"type": "text",
-                                                                                               "text": "Your %s exchange value is %s /n/n Visit our store now" % (users.get("K5"), users.get(
+                                                                                               "text": "Your %s exchange value is %s \n\n Visit our store now" % (users.get("K6"), users.get(
                                                                                                    "exchange_value"))}]}]
                                                                }})
         headers = {
