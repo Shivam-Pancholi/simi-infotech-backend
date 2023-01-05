@@ -383,7 +383,7 @@ def exchange_wp_msg(request):
     for users in request.data:
         numbers = users.get("K5")
         payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
-                              "type": "template", "template": {"name": "", "language": {"code": "en_US"},
+                              "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
                                                                "components": [{"type": "body",
                                                                                "parameters": [{"type": "text",
                                                                                                "text": "Your %s exchange value is %s /n/n Visit our store now" % (users.get("K5"), users.get(
