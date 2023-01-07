@@ -382,18 +382,20 @@ def exchange_wp_msg(request):
         return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("phone_numbers"))))
     for users in request.data:
         numbers = users.get("K5")
-        payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
-                              "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
-                                                               "components": [{"type": "body",
-                                                                               "parameters": [{"type": "text",
-                                                                                               "text": "Your %s exchange value is %s \n\n Visit our store now" % (users.get("K6"), users.get(
-                                                                                                   "exchange_value"))}]}]
-                                                               }})
+        msg_text = "Your %s exchange value is %s. Visit our store now" % (users.get("K6"), users.get("exchage_value"))
+        payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + numbers),
+                                  "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
+                                                                   "components": [{"type": "body",
+                                                                                   "parameters": [{"type": "text",
+                                                                                                   "text": msg_text}]}]
+                                                                   }})
         headers = {
             'Authorization': 'Bearer %s' % token,
             'Content-Type': 'application/json'
         }
         response = requests.request("POST", url, headers=headers, data=payload).json()
+        print(response)
+        print(response.get("messages"))
         if response.get("messages")[0].get("id"):
             if not cache.get("msg_%s_%s" % (phone_id, numbers)):
                 cache.set("msg_%s_%s" % (phone_id, numbers), "success", 60 * 60 * 24)
