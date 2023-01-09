@@ -378,31 +378,39 @@ def exchange_wp_msg(request):
     token = user.whatsapp_token
     url = "https://graph.facebook.com/v15.0/%s/messages" % phone_id
     limit = user.msg_limit
+    msg = request.data.get("free_field_msg")
     if limit < len(request.data):
         return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("phone_numbers"))))
     for users in request.data:
         numbers = users.get("K5")
-        msg_text = "Your %s exchange value is %s. Visit our store now" % (users.get("K6"), users.get("exchage_value"))
+        if msg.find("{{name}}") >=0:
+            msg = msg.replace("{{name}}", users.get("K4"))
+        if msg.find("{{product}}") >=0:
+            msg = msg.replace("{{name}}", users.get("K6"))
+        if msg.find("{{exchange_value}}") >=0:
+            msg = msg.replace("{{exchange_value}}", users.get("exchage_value"))
         payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + numbers),
                                   "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
                                                                    "components": [{"type": "body",
                                                                                    "parameters": [{"type": "text",
-                                                                                                   "text": msg_text}]}]
+                                                                                                   "text": msg}]}]
                                                                    }})
         headers = {
             'Authorization': 'Bearer %s' % token,
             'Content-Type': 'application/json'
         }
         response = requests.request("POST", url, headers=headers, data=payload).json()
-        print(response)
-        print(response.get("messages"))
-        if response.get("messages")[0].get("id"):
-            if not cache.get("msg_%s_%s" % (phone_id, numbers)):
-                cache.set("msg_%s_%s" % (phone_id, numbers), "success", 60 * 60 * 24)
-                data_dict[str(numbers)] = "success"
-                limit_remaining = limit - 1
-                user.msg_limit = limit_remaining
-                user.save()
+        if response.get("messages"):
+            if response.get("messages")[0]:
+                if response.get("messages")[0].get("id", ""):
+                    if not cache.get("msg_%s_%s" % (phone_id, numbers)):
+                        cache.set("msg_%s_%s" % (phone_id, numbers), "success", 60 * 60 * 24)
+                        data_dict[str(numbers)] = "success"
+                        limit_remaining = limit - 1
+                        user.msg_limit = limit_remaining
+                        user.save()
+                    else:
+                        data_dict[str(numbers)] = "success"
         else:
             data_dict[str(numbers)] = "error"
     return Response(data_dict)
