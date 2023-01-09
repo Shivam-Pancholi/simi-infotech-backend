@@ -380,8 +380,8 @@ def exchange_wp_msg(request):
     limit = user.msg_limit
     msg = request.data.get("free_field_msg")
     if limit < len(request.data):
-        return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("phone_numbers"))))
-    for users in request.data:
+        return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("data"))))
+    for users in request.data.get("data"):
         numbers = users.get("K5")
         if msg.find("{{name}}") >=0:
             msg = msg.replace("{{name}}", users.get("K4"))
