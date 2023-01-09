@@ -386,7 +386,7 @@ def exchange_wp_msg(request):
         if msg.find("{{name}}") >=0:
             msg = msg.replace("{{name}}", users.get("K4"))
         if msg.find("{{product}}") >=0:
-            msg = msg.replace("{{name}}", users.get("K6"))
+            msg = msg.replace("{{product}}", users.get("K6"))
         if msg.find("{{exchange_value}}") >=0:
             msg = msg.replace("{{exchange_value}}", users.get("exchage_value"))
         payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + numbers),
