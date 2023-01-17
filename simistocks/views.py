@@ -445,4 +445,10 @@ def default_data(request):
         data_url = "https://king-prawn-app-4zv54.ondigitalocean.app/" + user.template_img.url
     user.templates = {"msg": request.data.get("msg"), "img": data_url}
     user.save()
-    Response('Data saved successfully')
+    return Response('Data saved successfully')
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_default_data(request):
+    return Response(Userdata.objects.filter(user__id=request.user.id).last().templates)
