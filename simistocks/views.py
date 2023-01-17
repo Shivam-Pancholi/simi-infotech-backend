@@ -218,11 +218,13 @@ def simi_whatsapp(request):
     if limit < len(ast.literal_eval(request.data.get("phone_numbers"))):
         return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("phone_numbers"))))
     if request.data.get("image") or request.data.get("video") or request.data.get("document"):
-        user = Userdata.objects.filter(user__id=request.user.id).last()
-        user.template_img.delete()
-        user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
-        user.save()
-        data_url = "https://king-prawn-app-4zv54.ondigitalocean.app/" + user.template_img.url
+        if request.data.get("image") or request.data.get("video") or request.data.get("document")[:4].upper() == "HTTP":
+            data_url = request.data.get("image") or request.data.get("video") or request.data.get("document")
+        else:
+            user = Userdata.objects.filter(user__id=request.user.id).last()
+            user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
+            user.save()
+            data_url = "https://king-prawn-app-4zv54.ondigitalocean.app/" + user.template_img.url
     data = json.loads(request.data.get("data"))
     if data.get("components") and data.get("name") not in ["only_text", "text_with_image", "text_button_image"]:
         if data.get("components")[0].get('type') == 'HEADER':
@@ -298,8 +300,13 @@ def templates(request):
     user = Userdata.objects.filter(user__id=request.user.id).last()
     whatsapp_account_id = user.whatsapp_account_id
     token = user.whatsapp_token
+    default_txt = user.templates.get("msg", "")
+    default_img = user.templates.get("img", "")
     url = "https://graph.facebook.com/v15.0/%s/message_templates?access_token=%s" % (whatsapp_account_id, token)
     res = requests.get(url).json()
+    for data in res.get("data"):
+        data["default_text"] = default_txt
+        data["default_file"] = default_img
     return Response({"data": res.get("data")})
 
 
@@ -379,6 +386,7 @@ def exchange_wp_msg(request):
     url = "https://graph.facebook.com/v15.0/%s/messages" % phone_id
     limit = user.msg_limit
     msg = request.data.get("free_field_msg")
+    img = request.data.get("img", "")
     if limit < len(request.data):
         return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("data"))))
     for users in request.data.get("data"):
@@ -389,12 +397,23 @@ def exchange_wp_msg(request):
             msg = msg.replace("{{product}}", users.get("K6"))
         if msg.find("{{exchange_value}}") >=0:
             msg = msg.replace("{{exchange_value}}", users.get("exchage_value"))
-        payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + numbers),
-                                  "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
-                                                                   "components": [{"type": "body",
-                                                                                   "parameters": [{"type": "text",
-                                                                                                   "text": msg}]}]
-                                                                   }})
+        if img and msg:
+            payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
+                                  "type": "template",
+                                  "template": {"name": "text_button_image", "language": {"code": "en_US"},
+                                               "components": [{"type": "header", "parameters": [{"type": "image",
+                                                                                                 "image": {
+                                                                                                     "link": img}}]},
+                                                              {"type": "body", "parameters": [{"type": "text",
+                                                                                               "text": msg}]}]
+                                               }})
+        else:
+            payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + numbers),
+                                      "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
+                                                                       "components": [{"type": "body",
+                                                                                       "parameters": [{"type": "text",
+                                                                                                       "text": msg}]}]
+                                                                       }})
         headers = {
             'Authorization': 'Bearer %s' % token,
             'Content-Type': 'application/json'
@@ -414,3 +433,16 @@ def exchange_wp_msg(request):
         else:
             data_dict[str(numbers)] = "error"
     return Response(data_dict)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def default_data(request):
+    user = Userdata.objects.filter(user__id=request.user.id).last()
+    data_url = None
+    if request.data.get("image") or request.data.get("video") or request.data.get("document"):
+        user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
+        data_url = "https://king-prawn-app-4zv54.ondigitalocean.app/" + user.template_img.url
+    user.templates = {"msg": request.data.get("msg"), "img": data_url}
+    user.save()
+    Response('Data saved successfully')
