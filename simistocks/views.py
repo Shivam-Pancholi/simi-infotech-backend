@@ -442,6 +442,7 @@ def default_data(request):
     data_url = None
     if request.data.get("image") or request.data.get("video") or request.data.get("document"):
         user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
+        user.save()
         data_url = "https://king-prawn-app-4zv54.ondigitalocean.app/" + user.template_img.url
     user.templates = {"msg": request.data.get("msg"), "img": data_url}
     user.save()
