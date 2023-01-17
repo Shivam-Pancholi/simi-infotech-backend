@@ -222,6 +222,7 @@ def simi_whatsapp(request):
             data_url = request.data.get("image") or request.data.get("video") or request.data.get("document")
         else:
             user = Userdata.objects.filter(user__id=request.user.id).last()
+            user.template_img.delete()
             user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
             user.save()
             data_url = "https://king-prawn-app-4zv54.ondigitalocean.app/" + user.template_img.url
@@ -441,6 +442,7 @@ def default_data(request):
     user = Userdata.objects.filter(user__id=request.user.id).last()
     data_url = None
     if request.data.get("image") or request.data.get("video") or request.data.get("document"):
+        user.template_img.delete()
         user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
         user.save()
         data_url = "https://king-prawn-app-4zv54.ondigitalocean.app/" + user.template_img.url
