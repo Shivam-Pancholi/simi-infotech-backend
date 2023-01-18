@@ -220,7 +220,7 @@ def simi_whatsapp(request):
     data = json.loads(request.data.get("data"))
     if not (request.data.get("image") or request.data.get("video") or request.data.get("document")):
         if data.get("default_file"):
-            data_url = request.data.get("default_file")
+            data_url = data.get("default_file")
     elif request.data.get("image") or request.data.get("video") or request.data.get("document"):
         # user = Userdata.objects.filter(user__id=request.user.id).last()
         user.template_img.delete()
@@ -249,6 +249,13 @@ def simi_whatsapp(request):
                                            ]}
             else:
                 template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")}}
+    if request.data.get("free_field_msg"):
+        text = request.data.get("free_field_msg")
+    else:
+        if data.get("default_text"):
+            text = data.get("default_text")
+        else:
+            text = ""
     for numbers in ast.literal_eval(request.data.get("phone_numbers")):
         if data.get("name") in ["only_text", "text_with_image", "text_button_image"]:
             if data.get("name") == "only_text":
@@ -256,7 +263,7 @@ def simi_whatsapp(request):
                                       "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
                                                                        "components": [{"type": "body",
                                                                                        "parameters": [{"type": "text",
-                                                                                                       "text": request.data.get("free_field_msg")}]}]
+                                                                                                       "text": text}]}]
                                                          }})
             else:
                 payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
@@ -265,8 +272,7 @@ def simi_whatsapp(request):
                                                    "components": [{"type": "header", "parameters": [{"type": "image",
                                                                                                      "image": {"link": data_url}}]},
                                                                   {"type": "body", "parameters": [{"type": "text",
-                                                                                                   "text": request.data.get(
-                                                                                                       "free_field_msg")}]}]
+                                                                                                   "text": text}]}]
                                                    }})
         else:
             payload = json.dumps({
