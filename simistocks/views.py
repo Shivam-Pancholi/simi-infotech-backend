@@ -217,17 +217,17 @@ def simi_whatsapp(request):
     limit = user.msg_limit
     if limit < len(ast.literal_eval(request.data.get("phone_numbers"))):
         return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("phone_numbers"))))
-    if request.data.get("image") or request.data.get("video") or request.data.get("document"):
-        if (request.data.get("image") or request.data.get("video") or request.data.get("document"))[:4].upper() == "HTTP":
-            data_url = request.data.get("image") or request.data.get("video") or request.data.get("document")
-        else:
-            # user = Userdata.objects.filter(user__id=request.user.id).last()
-            user.template_img.delete()
-            user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
-            user.save()
-            data_url = "https://king-prawn-app-4zv54.ondigitalocean.app/" + user.template_img.url
-        print(data_url)
     data = json.loads(request.data.get("data"))
+    if not (request.data.get("image") or request.data.get("video") or request.data.get("document")):
+        if data.get("default_file"):
+            data_url = request.data.get("default_file")
+    elif request.data.get("image") or request.data.get("video") or request.data.get("document"):
+        # user = Userdata.objects.filter(user__id=request.user.id).last()
+        user.template_img.delete()
+        user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
+        user.save()
+        data_url = "https://king-prawn-app-4zv54.ondigitalocean.app/" + user.template_img.url
+        print(data_url)
     if data.get("components") and data.get("name") not in ["only_text", "text_with_image", "text_button_image"]:
         if data.get("components")[0].get('type') == 'HEADER':
             types = data.get("components")[0].get("format")
