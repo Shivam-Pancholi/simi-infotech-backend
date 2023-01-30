@@ -339,12 +339,12 @@ def send_wp_msg(request):
         return Response('Invalid Credentials')
     number_list = request.query_params.get('receiverMobileNo').split(',')
     for number in number_list:
-        if request.query_params.get('file_url'):
+        if request.query_params.get('fileurl'):
             payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),"type": "template","template":
                 {"name":"files", "language": {"code": "en_US"}, "components": [{"type": "header",
                                                                                "parameters": [{"type": "document",
                                                                                                "document":
-                                                                                                   {"link": request.query_params.get('file_url')}}]},
+                                                                                                   {"link": request.query_params.get('fileurl')}}]},
                                                                               {"type": "body", "parameters": [{"type": "text","text": request.query_params.get(
                                                                                                        "message", "Please find your attachment above")}]}]}})
         else:
