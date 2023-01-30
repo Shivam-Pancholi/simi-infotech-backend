@@ -339,12 +339,12 @@ def send_wp_msg(request):
         return Response('Invalid Credentials')
     number_list = request.query_params.get('receiverMobileNo').split(',')
     for number in number_list:
-        if request.query_params.get('file'):
+        if request.query_params.get('file_url'):
             payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),"type": "template","template":
                 {"name":"files", "language": {"code": "en_US"}, "components": [{"type": "header",
                                                                                "parameters": [{"type": "document",
                                                                                                "document":
-                                                                                                   {"link": request.query_params.get('file')}}]},
+                                                                                                   {"link": request.query_params.get('file_url')}}]},
                                                                               {"type": "body", "parameters": [{"type": "text","text": request.query_params.get(
                                                                                                        "message", "Please find your attachment above")}]}]}})
         else:
@@ -387,16 +387,49 @@ def delete_data(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def exchange_wp_msg(request):
-    data_dict = {}
+    data_dict, template = {}, {}
+    data_url = ""
     user = Userdata.objects.filter(user__id=request.user.id).last()
     phone_id = user.whatsapp_phone_no_id
     token = user.whatsapp_token
     url = "https://graph.facebook.com/v15.0/%s/messages" % phone_id
     limit = user.msg_limit
     msg = request.data.get("free_field_msg")
-    img = request.data.get("img", "")
     if limit < len(request.data):
         return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("data"))))
+    data = json.loads(request.data.get("template_data"))
+    if not (request.data.get("image") or request.data.get("video") or request.data.get("document")):
+        if data.get("default_file"):
+            data_url = data.get("default_file")
+    elif request.data.get("image") or request.data.get("video") or request.data.get("document"):
+        # user = Userdata.objects.filter(user__id=request.user.id).last()
+        user.template_img.delete()
+        user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
+        user.save()
+        data_url = "https://king-prawn-app-4zv54.ondigitalocean.app/" + user.template_img.url
+        print(data_url)
+    if data.get("components") and data.get("name") not in ["only_text", "text_with_image", "text_button_image"]:
+        if data.get("components")[0].get('type') == 'HEADER':
+            types = data.get("components")[0].get("format")
+            if types == 'TEXT':
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")},
+                            "components": [
+                                {"type": "header", "parameters": [{"type": "text", "text": data.get('text')}]}]}
+            elif types == 'IMAGE':
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")},
+                            "components": [{"type": "header", "parameters": [{"type": "image", "image": {
+                                "link": data_url}}]}]}
+            elif types == 'VIDEO':
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")},
+                            "components": [{"type": "header", "parameters": [{"type": "video", "video": {
+                                "link": data_url}}]}]}
+            elif types == 'DOCUMENT':
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")},
+                            "components": [{"type": "header", "parameters": [{"type": "document", "document": {
+                                "link": data_url, "filename": data.get('filename')}}]}
+                                           ]}
+            else:
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")}}
     for users in request.data.get("data"):
         numbers = users.get("K5")
         if msg.find("{{name}}") >=0:
@@ -405,23 +438,32 @@ def exchange_wp_msg(request):
             msg = msg.replace("{{product}}", users.get("K6"))
         if msg.find("{{exchange_value}}") >=0:
             msg = msg.replace("{{exchange_value}}", users.get("exchage_value"))
-        if img and msg:
-            payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
-                                  "type": "template",
-                                  "template": {"name": "text_button_image", "language": {"code": "en_US"},
-                                               "components": [{"type": "header", "parameters": [{"type": "image",
-                                                                                                 "image": {
-                                                                                                     "link": img}}]},
-                                                              {"type": "body", "parameters": [{"type": "text",
-                                                                                               "text": msg}]}]
-                                               }})
+        if data.get("name") in ["only_text", "text_with_image", "text_button_image"]:
+            if data.get("name") == "only_text":
+                payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
+                                      "type": "template",
+                                      "template": {"name": "only_text", "language": {"code": "en_US"},
+                                                   "components": [{"type": "body",
+                                                                   "parameters": [{"type": "text",
+                                                                                   "text": msg}]}]
+                                                   }})
+            else:
+                payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
+                                      "type": "template",
+                                      "template": {"name": data.get("name"), "language": {"code": "en_US"},
+                                                   "components": [{"type": "header", "parameters": [{"type": "image",
+                                                                                                     "image": {
+                                                                                                         "link": data_url}}]},
+                                                                  {"type": "body", "parameters": [{"type": "text",
+                                                                                                   "text": msg}]}]
+                                                   }})
         else:
-            payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + numbers),
-                                      "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
-                                                                       "components": [{"type": "body",
-                                                                                       "parameters": [{"type": "text",
-                                                                                                       "text": msg}]}]
-                                                                       }})
+            payload = json.dumps({
+                "messaging_product": "whatsapp",
+                "to": int('91' + str(numbers)),
+                "type": "template",
+                "template": template
+            })
         headers = {
             'Authorization': 'Bearer %s' % token,
             'Content-Type': 'application/json'
