@@ -490,6 +490,7 @@ def exchange_wp_msg(request):
 def default_data(request):
     user = Userdata.objects.filter(user__id=request.user.id).last()
     data_url = None
+    print(data_url)
     if request.data.get("image") or request.data.get("video") or request.data.get("document"):
         # user = Userdata.objects.filter(user__id=request.user.id).last()
         user.template_img.delete()
