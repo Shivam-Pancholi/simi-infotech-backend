@@ -1,3 +1,6 @@
+import os
+from urllib.parse import urlparse
+
 import requests
 from django.shortcuts import render
 import ast
@@ -340,11 +343,13 @@ def send_wp_msg(request):
     number_list = request.query_params.get('receiverMobileNo').split(',')
     for number in number_list:
         if request.query_params.get('fileurl'):
-            payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),"type": "template","template":
+            a = urlparse(request.query_params.get('fileurl'))
+            payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number), "type": "template","template":
                 {"name":"files", "language": {"code": "en_US"}, "components": [{"type": "header",
                                                                                "parameters": [{"type": "document",
                                                                                                "document":
-                                                                                                   {"link": request.query_params.get('fileurl')}}]},
+                                                                                                   {"link": request.query_params.get('fileurl'),
+                                                                                                    "filename": os.path.basename(a.path)}}]},
                                                                               {"type": "body", "parameters": [{"type": "text","text": request.query_params.get(
                                                                                                        "message", "Please find your attachment above")}]}]}})
         else:
@@ -424,9 +429,10 @@ def exchange_wp_msg(request):
                             "components": [{"type": "header", "parameters": [{"type": "video", "video": {
                                 "link": data_url}}]}]}
             elif types == 'DOCUMENT':
+                a = urlparse(data_url)
                 template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")},
                             "components": [{"type": "header", "parameters": [{"type": "document", "document": {
-                                "link": data_url, "filename": data.get('filename')}}]}
+                                "link": data_url, "filename": os.path.basename(a.path)}}]}
                                            ]}
             else:
                 template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")}}
