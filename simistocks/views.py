@@ -2,8 +2,11 @@ import os
 from urllib.parse import urlparse
 
 import requests
+from django.http import HttpResponse
 from django.shortcuts import render
 import ast
+
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from simistocks.models import Userdata
@@ -511,3 +514,19 @@ def default_data(request):
 @permission_classes([IsAuthenticated])
 def get_default_data(request):
     return Response(Userdata.objects.filter(user__id=request.user.id).last().templates)
+
+
+@csrf_exempt
+def webhook(request):
+    if request.method == 'POST':
+        # Get the incoming message data
+        data = dict(request.POST)
+        print(data)
+        sender_id = data.get('From', '')
+        message_text = data.get('Body', '')
+        print("sender_id", sender_id)
+        print("mess", message_text)
+        return HttpResponse(str("received"))
+    else:
+        print(request.GET)
+        return HttpResponse(dict(request.GET).get("hub.challenge", {}))

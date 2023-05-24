@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from simistocks.views import simidata, list_users, update_user, simi_whatsapp, templates, send_wp_msg, delete_data, \
-    exchange_wp_msg, default_data, get_default_data
+    exchange_wp_msg, default_data, get_default_data, webhook
 
 urlpatterns = [
     path('simidata', simidata),
@@ -13,5 +13,6 @@ urlpatterns = [
     path('delete_data', delete_data),
     path('exchange_wp_msg', exchange_wp_msg),
     path('default_data', default_data),
-    path('get_default_data', get_default_data)
+    path('get_default_data', get_default_data),
+    path('webhook', webhook)
 ]
