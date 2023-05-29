@@ -61,26 +61,28 @@ from rest_framework.parsers import MultiPartParser, FormParser
 @permission_classes([IsAuthenticated])
 def simidata(request):
     user = Userdata.objects.filter(user_id=request.user.id).first()
-    file_name = user.file_name
+    file_name = (user.file_name).split(",")
     data = user.data
-    resp = requests.get("http://simistocks.com/login/%s.json" % file_name)
-    resp = resp.json().get("ENVELOPE")
-    if resp == data.get("last_updated_data"):
-        data = data.get("data")
-        return Response(sum(list(data.values()), []))
     db_dict = {}
-    last_data = copy.deepcopy(resp)
-    for k, v in resp.items():
-        v["id"] = k.split("_")[1]
-        v["row"] = k
-        if db_dict.get(v.get('K1')):
-            db_dict.get(v.get('K1')).append(v)
-        else:
-            db_dict[v.get('K1')] = []
-            db_dict.get(v.get('K1')).append(v)
-        if data:
-            if data.get("data").get(v.get('K1')):
-                del data["data"][v.get('K1')]
+    for file in file_name:
+        resp = requests.get("http://simistocks.com/login/%s.json" % file)
+        print(resp)
+        resp = resp.json().get("ENVELOPE")
+        if resp == data.get("last_updated_data"):
+            data = data.get("data")
+            return Response(sum(list(data.values()), []))
+        last_data = copy.deepcopy(resp)
+        for k, v in resp.items():
+            v["id"] = k.split("_")[1]
+            v["row"] = k
+            if db_dict.get(v.get('K1')):
+                db_dict.get(v.get('K1')).append(v)
+            else:
+                db_dict[v.get('K1')] = []
+                db_dict.get(v.get('K1')).append(v)
+            if data:
+                if data.get("data").get(v.get('K1')):
+                    del data["data"][v.get('K1')]
     if not data:
         data = dict(sorted(db_dict.items(), key=lambda x: datetime.strptime(x[0], '%d-%m-%Y'), reverse=False))
         user.data = {"data": data, "last_updated_data": resp}
