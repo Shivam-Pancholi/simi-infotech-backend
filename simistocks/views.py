@@ -318,12 +318,13 @@ def templates(request):
     token = user.whatsapp_token
     default_txt = user.templates.get("msg", "")
     default_img = user.templates.get("img", "")
+    msg_limit = user.msg_limit
     url = "https://graph.facebook.com/v15.0/%s/message_templates?access_token=%s" % (whatsapp_account_id, token)
     res = requests.get(url).json()
     for data in res.get("data"):
         data["default_text"] = default_txt
         data["default_file"] = default_img
-    return Response({"data": res.get("data")})
+    return Response({"data": res.get("data"), "msg_limit": msg_limit})
 
 
 @api_view(['GET'])
