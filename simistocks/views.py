@@ -548,11 +548,14 @@ def simistocksdata(request):
         print(resp)
         resp = resp.json().get("ENVELOPE")
         for k, v in resp.items():
+            print(v.get("J1"))
             if not schemes.get(v.get("J1")):
                 schemes[v.get("J1")] = []
+                print(schemes)
                 schemes[v.get("J1")].append(v)
             else:
                 schemes[v.get("J1")].append(v)
+    print(schemes)
     for file in stock_file_name:
         resp = requests.get("http://simistocks.com/login/%s.json" % file)
         print(resp)
