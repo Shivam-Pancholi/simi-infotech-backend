@@ -547,6 +547,8 @@ def simistocksdata(request):
         resp = requests.get("http://simistocks.com/login/%s.json" % schemes_file)
         resp = resp.json().get("ENVELOPE")
         for k, v in resp.items():
+            if datetime.strptime(v.get("J4"), '%d-%m-%Y').date() < datetime.now().date():
+                continue
             if not schemes.get(v.get("J1")):
                 schemes[v.get("J1")] = []
                 schemes[v.get("J1")].append(v)
