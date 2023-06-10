@@ -533,3 +533,32 @@ def webhook(request):
     else:
         print(request.GET)
         return HttpResponse(dict(request.GET).get("hub.challenge", {}))
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def simistocksdata(request):
+    user = Userdata.objects.filter(user_id=request.user.id).first()
+    stock_file_name = user.stock_file_name.split(",")
+    scheme_file_name = user.stock_file_name.split(",")
+    db_list = []
+    schemes = {}
+    for schemes_file in scheme_file_name:
+        resp = requests.get("http://simistocks.com/login/%s.json" % schemes_file)
+        print(resp)
+        resp = resp.json().get("ENVELOPE")
+        for k, v in resp.items():
+            if not schemes.get(v.get("J1")):
+                schemes[v.get("J1")] = []
+            else:
+                schemes[v.get("J1")].append(v)
+    for file in stock_file_name:
+        resp = requests.get("http://simistocks.com/login/%s.json" % file)
+        print(resp)
+        resp = resp.json().get("ENVELOPE")
+        for k, v in resp.items():
+            v["id"] = k.split("_")[1]
+            v["row"] = k
+            v["schemes"] = schemes.get(v.get("c1", ""), [])
+            db_list.append(v)
+    return Response(db_list)
