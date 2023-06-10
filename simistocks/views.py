@@ -550,6 +550,7 @@ def simistocksdata(request):
         for k, v in resp.items():
             if not schemes.get(v.get("J1")):
                 schemes[v.get("J1")] = []
+                schemes[v.get("J1")].append(v)
             else:
                 schemes[v.get("J1")].append(v)
     for file in stock_file_name:
