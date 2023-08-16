@@ -161,7 +161,9 @@ def register(request):
                                 whatsapp_phone_no_id=request.data.get("whatsapp_phone_no_id"),
                                 whatsapp_token=request.data.get("whatsapp_token"),
                                 whatsapp_account_id=request.data.get("whatsapp_account_id"),
-                                msg_limit=request.data.get("msg_limit", 1000))
+                                msg_limit=request.data.get("msg_limit"),
+                                scheme_file_name=request.data.get("scheme_file_name"),
+                                stock_file_name=request.data.get("stock_file_name"))
         msg = "User Created Successfully"
     else:
         msg = "You don't have rights to perform this action"
@@ -176,7 +178,7 @@ def list_users(request):
         return Response(list(Userdata.objects.filter(user__is_staff=False).values("user__id", "user__is_active", "file_name", "user__email",
                                                                                   "user__date_joined", "whatsapp_phone_no_id", "whatsapp_token",
                                                                                   "whatsapp_account_id", "msg_limit",
-                                                                                  "user__first_name")))
+                                                                                  "user__first_name","stock_file_name", "scheme_file_name")))
     else:
         return Response("You don't have rights to perform this action")
 
@@ -204,7 +206,9 @@ def update_user(request):
         user.whatsapp_token = data.get("whatsapp_token", "")
         user.whatsapp_account_id = data.get("whatsapp_account_id", "")
         user.whatsapp_phone_no_id = data.get("whatsapp_phone_no_id", "")
-        user.msg_limit = data.get("msg_limit", 1000)
+        user.msg_limit = data.get("msg_limit")
+        user.scheme_file_name = data.get("scheme_file_name")
+        user.stock_file_name = data.get("stock_file_name")
         user.user.save()
         user.save()
         return Response("Success")

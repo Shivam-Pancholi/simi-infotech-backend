@@ -14,3 +14,10 @@ class Userdata(models.Model):
     msg_limit = models.IntegerField(default=0)
     scheme_file_name = models.TextField(null=True, blank=True)
     stock_file_name = models.TextField(null=True, blank=True)
+
+
+# class Manage_App_Access(models.Model):
+#     user = models.ForeignKey(Userdata, on_delete=models.PROTECT, null=True, blank=True)
+#     is_approved = models.BooleanField(blank=True)
+#     fcm_id = models.CharField(max_length=4096, null=True, blank=True)
+#     access_allowed = models.JSONField(default=dict)
