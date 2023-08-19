@@ -9,8 +9,8 @@ import ast
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from simistocks.models import Userdata
-from rest_framework import parsers, renderers, generics
+from simistocks.models import Userdata, Manage_App_Access
+from rest_framework import parsers, renderers, generics, status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.compat import coreapi, coreschema
@@ -142,6 +142,20 @@ class ObtainAuthToken(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
+        if request.data.get('clientType') == 'mobile-app':
+            User_obj = Userdata.objects.filter(user=user).last()
+            user_access = Manage_App_Access.objects.filter(user=User_obj, fcm_id=request.data.get("fcmToken"))
+            if user_access.exists():
+                is_approved = user_access.last().is_approved
+            else:
+                Manage_App_Access.objects.create(user=User_obj, fcm_id=request.data.get("fcmToken"))
+                is_approved = False
+            if is_approved:
+                return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
+                                 'is_approved': is_approved})
+            else:
+                return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
+                                 'is_approved': is_approved}, status=status.HTTP_403_FORBIDDEN)
         return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name})
 
 
