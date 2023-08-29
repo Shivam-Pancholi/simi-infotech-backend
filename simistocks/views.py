@@ -148,8 +148,13 @@ class ObtainAuthToken(APIView):
             if user_access.exists():
                 is_approved = user_access.last().is_approved
             else:
-                Manage_App_Access.objects.create(user=User_obj, fcm_id=request.data.get("fcmToken"))
-                is_approved = False
+                if User_obj.allowed_app_user + 1 <= User_obj.allowed_app_user:
+                    Manage_App_Access.objects.create(user=User_obj, fcm_id=request.data.get("fcmToken"),
+                                                     device_details=request.data.get("device_details"))
+                    is_approved = False
+                else:
+                    return Response("Please Contact admin as the limit for allowed user for using app has been reached",
+                                    status=status.HTTP_400_BAD_REQUEST)
             if is_approved:
                 return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
                                  'is_approved': is_approved})
@@ -177,7 +182,8 @@ def register(request):
                                 whatsapp_account_id=request.data.get("whatsapp_account_id"),
                                 msg_limit=request.data.get("msg_limit"),
                                 scheme_file_name=request.data.get("scheme_file_name"),
-                                stock_file_name=request.data.get("stock_file_name"))
+                                stock_file_name=request.data.get("stock_file_name"),
+                                allowed_app_user=request.data.get("allowed_app_user"))
         msg = "User Created Successfully"
     else:
         msg = "You don't have rights to perform this action"
@@ -192,7 +198,8 @@ def list_users(request):
         return Response(list(Userdata.objects.filter(user__is_staff=False).values("user__id", "user__is_active", "file_name", "user__email",
                                                                                   "user__date_joined", "whatsapp_phone_no_id", "whatsapp_token",
                                                                                   "whatsapp_account_id", "msg_limit",
-                                                                                  "user__first_name","stock_file_name", "scheme_file_name")))
+                                                                                  "user__first_name", "stock_file_name",
+                                                                                  "scheme_file_name", "allowed_app_user")))
     else:
         return Response("You don't have rights to perform this action")
 
@@ -223,6 +230,7 @@ def update_user(request):
         user.msg_limit = data.get("msg_limit")
         user.scheme_file_name = data.get("scheme_file_name")
         user.stock_file_name = data.get("stock_file_name")
+        user.allowed_app_user = data.get("allowed_app_user")
         user.user.save()
         user.save()
         return Response("Success")
@@ -581,3 +589,50 @@ def simistocksdata(request):
             v["schemes"] = schemes.get(v.get("c1", ""), [])
             db_list.append(v)
     return Response(db_list)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_app_users(request):
+    admin = User.objects.filter(id=request.user.id).last().is_superuser
+    if admin:
+        return Response(list(Manage_App_Access.objects.all().values("id", "user__user__email", "is_approved", "fcm_id",
+                                                                    "access_allowed", "device_name", "device_details")))
+    else:
+        app_access = Manage_App_Access.objects.filter(user__user_id=request.user.id)
+        if app_access:
+            return Response(list(app_access.last().values("id", "user__user__email", "is_approved", "fcm_id", "access_allowed",
+                                                                    "device_name", "device_details")))
+        return Response("No data Found")
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_app_user(request):
+    data = request.data
+    admin = User.objects.filter(id=request.user.id).last()
+    if admin.is_superuser:
+        if data.get("delete", False):
+            Manage_App_Access.objects.filter(id=data.get('id')).delete()
+            return Response("App User has been deleted")
+        else:
+            app_access = Manage_App_Access.objects.filter(id=data.get("id")).last()
+            app_access.is_approved = data.get("is_approved")
+            app_access.device_name = data.get("device_name")
+            app_access.device_details = data.get("device_details")
+            app_access.fcm_id = data.get("fcm_id")
+            app_access.access_allowed = data.get("access_allowed")
+        app_access.save()
+        return Response("Success")
+    else:
+        app_access = Manage_App_Access.objects.filter(id=data.get("id")).last()
+        if app_access:
+            app_access.is_approved = data.get("is_approved")
+            app_access.device_name = data.get("device_name")
+            app_access.device_details = data.get("device_details")
+            app_access.fcm_id = data.get("fcm_id")
+            app_access.access_allowed = data.get("access_allowed")
+            app_access.save()
+            return Response("Success")
+        else:
+            return Response("Something Went wrong")
