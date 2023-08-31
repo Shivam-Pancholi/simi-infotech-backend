@@ -19,7 +19,7 @@ class Userdata(models.Model):
 
 class Manage_App_Access(models.Model):
     user = models.ForeignKey(Userdata, on_delete=models.PROTECT, null=True, blank=True)
-    is_approved = models.BooleanField(null=True, blank=True)
+    is_approved = models.BooleanField(null=True, blank=True, default=False)
     fcm_id = models.CharField(max_length=4096, null=True, blank=True)
     access_allowed = models.JSONField(default=dict)
     device_name = models.CharField(max_length=4096, null=True, blank=True)
