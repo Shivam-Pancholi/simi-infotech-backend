@@ -153,7 +153,8 @@ class ObtainAuthToken(APIView):
                                                      device_details=request.data.get("device_details"))
                     is_approved = False
                 else:
-                    return Response("Please Contact admin as the limit for allowed user for using app has been reached",
+                    return Response({"message": "Please Contact admin as the limit for allowed user for using app has "
+                                                "been reached"},
                                     status=status.HTTP_400_BAD_REQUEST)
             if is_approved:
                 return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
