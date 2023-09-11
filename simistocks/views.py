@@ -475,8 +475,8 @@ def exchange_wp_msg(request):
             msg = msg.replace("{{name}}", users.get("K4"))
         if msg.find("{{product}}") >= 0:
             msg = msg.replace("{{product}}", users.get("K6"))
-        if msg.find("{{exchange_value}}") >= 0:
-            msg = msg.replace("{{exchange_value}}", users.get("exchage_value"))
+        if msg.find("{{value}}") >= 0:
+            msg = msg.replace("{{value}}", users.get("exchage_value"))
         if data.get("name") in ["only_text", "text_with_image", "text_button_image"]:
             if data.get("name") == "only_text":
                 payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
