@@ -138,34 +138,31 @@ class ObtainAuthToken(APIView):
         return self.serializer_class(*args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        return Response({"message": "Please Contact admin as the limit for allowed user for using app has "
-                                    "been reached"},
-                        status=status.HTTP_400_BAD_REQUEST)
-        # serializer = self.get_serializer(data=request.data)
-        # serializer.is_valid(raise_exception=True)
-        # user = serializer.validated_data['user']
-        # token, created = Token.objects.get_or_create(user=user)
-        # if request.data.get('clientType') == 'mobile-app':
-        #     User_obj = Userdata.objects.filter(user=user).last()
-        #     user_access = Manage_App_Access.objects.filter(user=User_obj, fcm_id=request.data.get("fcmToken"))
-        #     if user_access.exists():
-        #         is_approved = user_access.last().is_approved
-        #     else:
-        #         if User_obj.allowed_app_user + 1 <= User_obj.allowed_app_user:
-        #             Manage_App_Access.objects.create(user=User_obj, fcm_id=request.data.get("fcmToken"),
-        #                                              device_details=request.data.get("device_details"))
-        #             is_approved = False
-        #         else:
-        #             return Response({"message": "Please Contact admin as the limit for allowed user for using app has "
-        #                                         "been reached"},
-        #                             status=status.HTTP_400_BAD_REQUEST)
-        #     if is_approved:
-        #         return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
-        #                          'is_approved': is_approved})
-        #     else:
-        #         return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
-        #                          'is_approved': is_approved}, status=status.HTTP_403_FORBIDDEN)
-        # return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name})
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        if request.data.get('clientType') == 'mobile-app':
+            User_obj = Userdata.objects.filter(user=user).last()
+            user_access = Manage_App_Access.objects.filter(user=User_obj, fcm_id=request.data.get("fcmToken"))
+            if user_access.exists():
+                is_approved = user_access.last().is_approved
+            else:
+                if User_obj.allowed_app_user + 1 <= User_obj.allowed_app_user:
+                    Manage_App_Access.objects.create(user=User_obj, fcm_id=request.data.get("fcmToken"),
+                                                     device_details=request.data.get("device_details"))
+                    is_approved = False
+                else:
+                    return Response({"message": "Please Contact admin as the limit for allowed user for using app has "
+                                                "been reached"},
+                                    status=status.HTTP_400_BAD_REQUEST)
+            if is_approved:
+                return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
+                                 'is_approved': is_approved})
+            else:
+                return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
+                                 'is_approved': is_approved}, status=status.HTTP_403_FORBIDDEN)
+        return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name})
 
 
 obtain_auth_token = ObtainAuthToken.as_view()
