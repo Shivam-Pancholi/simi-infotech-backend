@@ -144,11 +144,11 @@ class ObtainAuthToken(APIView):
         token, created = Token.objects.get_or_create(user=user)
         if request.data.get('clientType') == 'mobile-app':
             User_obj = Userdata.objects.filter(user=user).last()
-            user_access = Manage_App_Access.objects.filter(user=User_obj, fcm_id=request.data.get("fcmToken"))
-            if user_access.exists():
+            user_access = Manage_App_Access.objects.filter(user=User_obj)
+            if user_access.filter(fcm_id=request.data.get("fcmToken")).exists():
                 is_approved = user_access.last().is_approved
             else:
-                if User_obj.allowed_app_user + 1 <= User_obj.allowed_app_user:
+                if len(user_access) + 1 <= User_obj.allowed_app_user:
                     Manage_App_Access.objects.create(user=User_obj, fcm_id=request.data.get("fcmToken"),
                                                      device_details=request.data.get("device_details"))
                     is_approved = False
