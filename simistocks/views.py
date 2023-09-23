@@ -150,7 +150,7 @@ class ObtainAuthToken(APIView):
             else:
                 if len(user_access) + 1 <= User_obj.allowed_app_user:
                     Manage_App_Access.objects.create(user=User_obj, fcm_id=request.data.get("fcmToken"),
-                                                     device_details=request.data.get("device_details"))
+                                                     device_details=request.data.get("deviceDetails"))
                     is_approved = False
                 else:
                     return Response({"message": "Please Contact admin as the limit for allowed user for using app has "
