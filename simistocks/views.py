@@ -64,6 +64,9 @@ def simidata(request):
     file_name = (user.file_name).split(",")
     data = user.data
     db_dict = {}
+    if not file_name:
+        return Response({"message": "No file is linked to this account"},
+                        status=status.HTTP_404_NOT_FOUND)
     for file in file_name:
         resp = requests.get("http://simistocks.com/login/%s.json" % file)
         print(resp)
@@ -574,6 +577,9 @@ def simistocksdata(request):
     scheme_file_name = user.scheme_file_name.split(",")
     db_list = []
     schemes = {}
+    if not scheme_file_name:
+        return Response({"message": "No file is linked to this account"},
+                        status=status.HTTP_404_NOT_FOUND)
     for schemes_file in scheme_file_name:
         resp = requests.get("http://simistocks.com/login/%s.json" % schemes_file)
         resp = resp.json().get("ENVELOPE")
