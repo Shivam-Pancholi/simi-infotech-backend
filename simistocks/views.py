@@ -264,7 +264,8 @@ def simi_whatsapp(request):
         user.template_img.delete()
         user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
         user.save()
-        data_url = "https://admin.simiinfotech.com/" + user.template_img.url
+        data_url = "https://king-prawn-app-4zv54.ondigitalocean.app" + user.template_img.url
+        #data_url = "https://admin.simiinfotech.com/" + user.template_img.url
         print(data_url)
     if data.get("components") and data.get("name") not in ["only_text", "text_with_image", "text_button_image"]:
         if data.get("components")[0].get('type') == 'HEADER':
@@ -451,7 +452,8 @@ def exchange_wp_msg(request):
         user.template_img.delete()
         user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
         user.save()
-        data_url = "https://admin.simiinfotech.com/" + user.template_img.url
+        #data_url = "https://admin.simiinfotech.com" + user.template_img.url
+        data_url = "https://king-prawn-app-4zv54.ondigitalocean.app" + user.template_img.url
         print(data_url)
     if data.get("components") and data.get("name") not in ["only_text", "text_with_image", "text_button_image"]:
         if data.get("components")[0].get('type') == 'HEADER':
@@ -541,7 +543,8 @@ def default_data(request):
         user.template_img.delete()
         user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
         user.save()
-        data_url = "https://admin.simiinfotech.com/" + user.template_img.url
+        data_url = "https://king-prawn-app-4zv54.ondigitalocean.app" + user.template_img.url
+        #data_url = "https://admin.simiinfotech.com/" + user.template_img.url
     user.templates = {"msg": request.data.get("msg"), "img": data_url}
     user.save()
     return Response('Data saved successfully')
