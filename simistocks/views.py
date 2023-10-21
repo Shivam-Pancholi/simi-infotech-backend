@@ -583,17 +583,18 @@ def simistocksdata(request):
     if not scheme_file_name:
         return Response({"message": "No file is linked to this account"},
                         status=status.HTTP_404_NOT_FOUND)
-    for schemes_file in scheme_file_name:
-        resp = requests.get("http://simistocks.com/login/%s.json" % schemes_file)
-        resp = resp.json().get("ENVELOPE")
-        for k, v in resp.items():
-            if not (datetime.strptime(v.get("J3"), '%d-%m-%Y').date() <= datetime.now().date() <= datetime.strptime(v.get("J4"), '%d-%m-%Y').date()):
-                continue
-            if not schemes.get(v.get("J1")):
-                schemes[v.get("J1")] = []
-                schemes[v.get("J1")].append(v)
-            else:
-                schemes[v.get("J1")].append(v)
+    if scheme_file_name:
+        for schemes_file in scheme_file_name:
+            resp = requests.get("http://simistocks.com/login/%s.json" % schemes_file)
+            resp = resp.json().get("ENVELOPE")
+            for k, v in resp.items():
+                if not (datetime.strptime(v.get("J3"), '%d-%m-%Y').date() <= datetime.now().date() <= datetime.strptime(v.get("J4"), '%d-%m-%Y').date()):
+                    continue
+                if not schemes.get(v.get("J1")):
+                    schemes[v.get("J1")] = []
+                    schemes[v.get("J1")].append(v)
+                else:
+                    schemes[v.get("J1")].append(v)
     for file in stock_file_name:
         resp = requests.get("http://simistocks.com/login/%s.json" % file)
         resp = resp.json().get("ENVELOPE")
