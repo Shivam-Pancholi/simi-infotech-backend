@@ -374,8 +374,8 @@ def send_wp_msg(request):
     # response = requests.request("POST", url, headers=headers, data=payload).json()
     # print(response)
     if request.query_params.get('token') == "107427908838031" and request.query_params.get('username') == "simiinfotech":
-        user = Userdata.objects.filter(user__username="mobilestore",
-                                       whatsapp_phone_no_id="104185832596316").last()
+        user = Userdata.objects.filter(user__username="kapil",
+                                       whatsapp_phone_no_id="111935795037601").last()
     else:
         user = Userdata.objects.filter(user__username=request.query_params.get('username'),
                                        whatsapp_phone_no_id=request.query_params.get('token')).last()
