@@ -144,16 +144,20 @@ class ObtainAuthToken(APIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
+        device_name = ''
         token, created = Token.objects.get_or_create(user=user)
         if request.data.get('clientType') == 'mobile-app':
             User_obj = Userdata.objects.filter(user=user).last()
             user_access = Manage_App_Access.objects.filter(user=User_obj)
             if user_access.filter(fcm_id=request.data.get("fcmToken")).exists():
                 is_approved = user_access.last().is_approved
+                device_name = user_access.last().device_name
+                user_app_id = user_access.filter(fcm_id=request.data.get("fcmToken")).last().id
             else:
                 if len(user_access) + 1 <= User_obj.allowed_app_user:
-                    Manage_App_Access.objects.create(user=User_obj, fcm_id=request.data.get("fcmToken"),
+                    user_app = Manage_App_Access.objects.create(user=User_obj, fcm_id=request.data.get("fcmToken"),
                                                      device_details=request.data.get("deviceDetails"))
+                    user_app_id = user_app.id
                     is_approved = False
                 else:
                     return Response({"message": "Please Contact admin as the limit for allowed user for using app has "
@@ -161,10 +165,11 @@ class ObtainAuthToken(APIView):
                                     status=status.HTTP_400_BAD_REQUEST)
             if is_approved:
                 return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
-                                 'is_approved': is_approved})
+                                 'is_approved': is_approved, 'device_name': device_name, 'user_app_id': user_app_id})
             else:
                 return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
-                                 'is_approved': is_approved}, status=status.HTTP_403_FORBIDDEN)
+                                 'is_approved': is_approved, 'device_name': device_name, 'user_app_id': user_app_id},
+                                status=status.HTTP_403_FORBIDDEN)
         return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name})
 
 
@@ -641,6 +646,10 @@ def update_app_user(request):
         return Response("Success")
     else:
         app_access = Manage_App_Access.objects.filter(id=data.get("id")).last()
+        if data.get("device_name") and not data.get("is_approved", ""):
+            app_access.device_name = data.get("device_name")
+            app_access.save()
+            return Response("Success")
         if app_access:
             app_access.is_approved = data.get("is_approved")
             app_access.device_name = data.get("device_name")
