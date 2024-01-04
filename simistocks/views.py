@@ -637,7 +637,7 @@ def update_app_user(request):
             return Response("App User has been deleted")
         else:
             app_access = Manage_App_Access.objects.filter(id=data.get("id")).last()
-            app_access.is_approved = data.get("is_approved")
+            app_access.is_approved = data.get("is_approved", False)
             app_access.device_name = data.get("device_name")
             app_access.device_details = data.get("device_details")
             app_access.fcm_id = data.get("fcm_id")
