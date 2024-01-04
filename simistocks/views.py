@@ -650,7 +650,7 @@ def update_app_user(request):
             app_access.device_name = data.get("device_name")
             app_access.save()
             return Response("Success")
-        if app_access:
+        elif app_access:
             app_access.is_approved = data.get("is_approved")
             app_access.device_name = data.get("device_name")
             app_access.device_details = data.get("device_details")
