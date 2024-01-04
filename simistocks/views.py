@@ -641,7 +641,7 @@ def update_app_user(request):
             app_access.device_name = data.get("device_name")
             app_access.device_details = data.get("device_details")
             app_access.fcm_id = data.get("fcm_id")
-            app_access.access_allowed = data.get("access_allowed")
+            app_access.access_allowed = data.get("access_allowed", {})
         app_access.save()
         return Response("Success")
     else:
