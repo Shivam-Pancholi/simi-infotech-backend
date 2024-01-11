@@ -220,6 +220,7 @@ def update_user(request):
     if data.get("blocked_number", []):
         user = Userdata.objects.filter(user__id=data.get('id')).last()
         user.blocked_number = data.get("blocked_number")
+        return Response("Blocked number has been updated")
     if data.get("delete", False):
         Userdata.objects.filter(user__id=data.get('id')).delete()
         User.objects.filter(id=data.get('id')).delete()
