@@ -305,6 +305,8 @@ def simi_whatsapp(request):
         else:
             text = ""
     for numbers in ast.literal_eval(request.data.get("phone_numbers")):
+        if numbers in user.blocked_number:
+            continue
         if data.get("name") in ["only_text", "text_with_image", "text_button_image"]:
             if data.get("name") == "only_text":
                 payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
@@ -392,6 +394,8 @@ def send_wp_msg(request):
         return Response('Invalid Credentials')
     number_list = request.query_params.get('receiverMobileNo').split(',')
     for number in number_list:
+        if number in user.blocked_number:
+            continue
         if request.query_params.get('fileurl'):
             a = urlparse(request.query_params.get('fileurl'))
             payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number), "type": "template","template":
@@ -489,6 +493,8 @@ def exchange_wp_msg(request):
                 template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")}}
     for users in ast.literal_eval(request.data.get("data")):
         numbers = users.get("K5")
+        if numbers in user.blocked_number:
+            continue
         if msg.find("{{name}}") >= 0:
             msg = msg.replace("{{name}}", users.get("K4"))
         if msg.find("{{product}}") >= 0:
