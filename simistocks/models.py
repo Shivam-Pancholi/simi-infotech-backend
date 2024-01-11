@@ -15,7 +15,7 @@ class Userdata(models.Model):
     scheme_file_name = models.TextField(null=True, blank=True)
     stock_file_name = models.TextField(null=True, blank=True)
     allowed_app_user = models.IntegerField(default=0)
-    # blocked_number = models.JSONField(default=list)
+    blocked_number = models.JSONField(default=list)
 
 
 class Manage_App_Access(models.Model):
