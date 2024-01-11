@@ -670,3 +670,10 @@ def update_app_user(request):
             return Response("Success")
         else:
             return Response("Something Went wrong")
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def block_number_details(request):
+    user = Userdata.objects.filter(user__id=request.user.id).last()
+    return Response({"blocked_numbers": user.blocked_number})
