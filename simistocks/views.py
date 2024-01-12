@@ -217,9 +217,9 @@ def list_users(request):
 @permission_classes([IsAuthenticated])
 def update_user(request):
     data = request.data
-    if data.get("blocked_number", []):
-        user = Userdata.objects.filter(user__id=data.get('id')).last()
-        user.blocked_number = data.get("blocked_number")
+    if data.get("blocked_numbers", []):
+        user = Userdata.objects.filter(user__id=request.user.id).last()
+        user.blocked_number = data.get("blocked_numbers")
         return Response("Blocked number has been updated")
     if data.get("delete", False):
         Userdata.objects.filter(user__id=data.get('id')).delete()
