@@ -677,3 +677,16 @@ def update_app_user(request):
 def block_number_details(request):
     user = Userdata.objects.filter(user__id=request.user.id).last()
     return Response({"blocked_numbers": user.blocked_number})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def ping(request):
+    User_obj = Userdata.objects.filter(user__id=request.user.id).last()
+    user_access = Manage_App_Access.objects.filter(user=User_obj)
+    if user_access.filter(fcm_id=request.data.get("fcmToken")).exists():
+        is_approved = user_access.last().is_approved
+    else:
+        is_approved = False
+    return Response({"is_approved": is_approved})
+
