@@ -84,6 +84,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "django.contrib.staticfiles.middleware.StaticFilesMiddleware",
 ]
 
 ROOT_URLCONF = 'siminfotech.urls'
