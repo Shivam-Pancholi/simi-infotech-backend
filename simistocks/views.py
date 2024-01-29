@@ -153,8 +153,8 @@ class ObtainAuthToken(APIView):
             print(user_access)
             if user_access.filter(fcm_id=request.data.get("fcmToken")).exists():
                 print(1)
-                is_approved = user_access.last().is_approved
-                device_name = user_access.last().device_name
+                is_approved = user_access.filter(fcm_id=request.data.get("fcmToken")).last().is_approved
+                device_name = user_access.filter(fcm_id=request.data.get("fcmToken")).last().device_name
                 user_app_id = user_access.filter(fcm_id=request.data.get("fcmToken")).last().id
                 print("1st data", is_approved, device_name, user_app_id)
             else:
