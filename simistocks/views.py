@@ -148,28 +148,38 @@ class ObtainAuthToken(APIView):
         token, created = Token.objects.get_or_create(user=user)
         if request.data.get('clientType') == 'mobile-app':
             User_obj = Userdata.objects.filter(user=user).last()
+            print(User_obj)
             user_access = Manage_App_Access.objects.filter(user=User_obj)
+            print(user_access)
             if user_access.filter(fcm_id=request.data.get("fcmToken")).exists():
+                print(1)
                 is_approved = user_access.last().is_approved
                 device_name = user_access.last().device_name
                 user_app_id = user_access.filter(fcm_id=request.data.get("fcmToken")).last().id
+                print("1st data", is_approved, device_name, user_app_id)
             else:
+                print(2)
                 if len(user_access) + 1 <= User_obj.allowed_app_user:
                     user_app = Manage_App_Access.objects.create(user=User_obj, fcm_id=request.data.get("fcmToken"),
                                                      device_details=request.data.get("deviceDetails"))
                     user_app_id = user_app.id
                     is_approved = False
+                    print("2", user_app_id, user_app)
                 else:
+                    print(3)
                     return Response({"message": "Please Contact admin as the limit for allowed user for using app has "
                                                 "been reached"},
                                     status=status.HTTP_400_BAD_REQUEST)
             if is_approved:
+                print(4)
                 return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
                                  'is_approved': is_approved, 'device_name': device_name, 'user_app_id': user_app_id})
             else:
+                print(5)
                 return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
                                  'is_approved': is_approved, 'device_name': device_name, 'user_app_id': user_app_id},
                                 status=status.HTTP_403_FORBIDDEN)
+        print(6)
         return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name})
 
 
