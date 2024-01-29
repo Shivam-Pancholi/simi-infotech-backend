@@ -696,7 +696,7 @@ def ping(request):
     User_obj = Userdata.objects.filter(user__id=request.user.id).last()
     user_access = Manage_App_Access.objects.filter(user=User_obj)
     if user_access.filter(fcm_id=request.data.get("fcmToken")).exists():
-        is_approved = user_access.last().is_approved
+        is_approved = user_access.filter(fcm_id=request.data.get("fcmToken")).last().is_approved
     else:
         is_approved = False
     return Response({"is_approved": is_approved})
