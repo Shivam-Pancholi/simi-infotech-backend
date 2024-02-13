@@ -182,27 +182,28 @@ class ObtainAuthToken(APIView):
                                  'is_approved': is_approved, 'device_name': device_name, 'user_app_id': user_app_id},
                                 status=status.HTTP_403_FORBIDDEN)
         print(6)
-        number = random.randint(1111, 9999)
-        User_obj.otp = number
-        numbers = User_obj.mobile_number
-        token = "EAAIgdUrTOEwBALJ7ZBX8cwtCe4Xfo1x8qfBgLwryErWHokEeL2QDmGBxZAJTu0agIw0ZC90vffz18yoyvkSZA9S9ZBSgvYStHPmvz" \
-                "PiVdvqMj16ZAqVn7u9ZBlo2ZAKIYulPWMOZAAF1kvuftENQWtVXzljmFxTpc9PYup6rJTqZBrdAPrYPG95xLU2eQ8XIxBOaW5dN6Z" \
-                "BxRT3ugZDZD"
-        url = "https://graph.facebook.com/v15.0/107427908838031/messages"
-        payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
-                              "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
-                                                               "components": [{"type": "body",
-                                                                               "parameters": [{"type": "text",
-                                                                                               "text": "Otp for "
-                                                                                                       "verification is "
-                                                                                                       "%s" % number}]}]
-                                                               }})
-        headers = {
-            'Authorization': 'Bearer %s' % token,
-            'Content-Type': 'application/json'
-        }
-        response = requests.request("POST", url, headers=headers, data=payload).json()
-        User_obj.save()
+        if User_obj.otp_authentication:
+            number = random.randint(1111, 9999)
+            User_obj.otp = number
+            numbers = User_obj.mobile_number
+            token = "EAAIgdUrTOEwBALJ7ZBX8cwtCe4Xfo1x8qfBgLwryErWHokEeL2QDmGBxZAJTu0agIw0ZC90vffz18yoyvkSZA9S9ZBSgvYStHPmvz" \
+                    "PiVdvqMj16ZAqVn7u9ZBlo2ZAKIYulPWMOZAAF1kvuftENQWtVXzljmFxTpc9PYup6rJTqZBrdAPrYPG95xLU2eQ8XIxBOaW5dN6Z" \
+                    "BxRT3ugZDZD"
+            url = "https://graph.facebook.com/v15.0/107427908838031/messages"
+            payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
+                                  "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
+                                                                   "components": [{"type": "body",
+                                                                                   "parameters": [{"type": "text",
+                                                                                                   "text": "Otp for "
+                                                                                                           "verification is "
+                                                                                                           "%s" % number}]}]
+                                                                   }})
+            headers = {
+                'Authorization': 'Bearer %s' % token,
+                'Content-Type': 'application/json'
+            }
+            response = requests.request("POST", url, headers=headers, data=payload).json()
+            User_obj.save()
         return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
                          'access_allowed': User_obj.access_allowed, 'otp_authentication': User_obj.otp_authentication})
 
