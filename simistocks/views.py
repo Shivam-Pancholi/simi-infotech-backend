@@ -224,7 +224,7 @@ def list_users(request):
                                                                                   "user__date_joined", "whatsapp_phone_no_id", "whatsapp_token",
                                                                                   "whatsapp_account_id", "msg_limit",
                                                                                   "user__first_name", "stock_file_name",
-                                                                                  "scheme_file_name", "allowed_app_user"
+                                                                                  "scheme_file_name", "allowed_app_user",
                                                                                   "mobile_number", "otp_authentication",
                                                                                   "access_allowed", "third_party_api",
                                                                                   "otp")))
