@@ -198,7 +198,7 @@ class ObtainAuthToken(APIView):
                                                                                    "parameters": [{"type": "text",
                                                                                                    "text": "Otp for "
                                                                                                            "verification is "
-                                                                                                           "%s" % number}]}]
+                                                                                                           "*%s*" % number}]}]
                                                                    }})
             headers = {
                 'Authorization': 'Bearer %s' % token,
