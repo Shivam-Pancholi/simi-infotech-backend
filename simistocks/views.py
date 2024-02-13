@@ -433,8 +433,7 @@ def templates(request):
       "id": "1234159660829621",
       "default_text": "",
       "default_file": ""
-    },
-    {
+    }, {
       "name": "files",
       "components": [
         {
@@ -462,8 +461,7 @@ def templates(request):
       "id": "739438117579441",
       "default_text": "",
       "default_file": ""
-    },
-    {
+    }, {
       "name": "only_text",
       "components": [
         {
@@ -483,11 +481,7 @@ def templates(request):
       "category": "MARKETING",
       "id": "826005875438677",
       "default_text": "",
-      "default_file": ""
-    },
-  ],
-  "msg_limit": "Unlimited"
-})
+      "default_file": ""}], "msg_limit": "Unlimited"})
     whatsapp_account_id = user.whatsapp_account_id
     token = user.whatsapp_token
     default_txt = user.templates.get("msg", "")
