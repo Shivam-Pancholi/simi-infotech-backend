@@ -15,7 +15,7 @@ class Userdata(models.Model):
     scheme_file_name = models.TextField(null=True, blank=True)
     stock_file_name = models.TextField(null=True, blank=True)
     allowed_app_user = models.IntegerField(default=0)
-    mobile_number = models.IntegerField(default=0)
+    mobile_number = models.CharField(max_length=2048, null=True, blank=True)
     otp_authentication = models.BooleanField(null=True, blank=True, default=False)
     access_allowed = models.JSONField(default=dict)
     third_party_api = models.CharField(max_length=8192, null=True, blank=True)
