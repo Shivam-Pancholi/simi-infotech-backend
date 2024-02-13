@@ -5,6 +5,7 @@ import requests
 from django.http import HttpResponse
 from django.shortcuts import render
 import ast
+import random
 
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes
@@ -146,8 +147,8 @@ class ObtainAuthToken(APIView):
         user = serializer.validated_data['user']
         device_name = ''
         token, created = Token.objects.get_or_create(user=user)
+        User_obj = Userdata.objects.filter(user=user).last()
         if request.data.get('clientType') == 'mobile-app':
-            User_obj = Userdata.objects.filter(user=user).last()
             print(User_obj)
             user_access = Manage_App_Access.objects.filter(user=User_obj)
             print(user_access)
@@ -173,14 +174,19 @@ class ObtainAuthToken(APIView):
             if is_approved:
                 print(4)
                 return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
-                                 'is_approved': is_approved, 'device_name': device_name, 'user_app_id': user_app_id})
+                                 'is_approved': is_approved, 'device_name': device_name, 'user_app_id': user_app_id,
+                                 'access_allowed': user_access.last().access_allowed})
             else:
                 print(5)
                 return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
                                  'is_approved': is_approved, 'device_name': device_name, 'user_app_id': user_app_id},
                                 status=status.HTTP_403_FORBIDDEN)
         print(6)
-        return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name})
+        number = random.randint(1111, 9999)
+        User_obj.otp = number
+        User_obj.save()
+        return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
+                         'access_allowed': User_obj.access_allowed, 'otp_authentication': User_obj.otp_authentication})
 
 
 obtain_auth_token = ObtainAuthToken.as_view()
@@ -218,7 +224,10 @@ def list_users(request):
                                                                                   "user__date_joined", "whatsapp_phone_no_id", "whatsapp_token",
                                                                                   "whatsapp_account_id", "msg_limit",
                                                                                   "user__first_name", "stock_file_name",
-                                                                                  "scheme_file_name", "allowed_app_user")))
+                                                                                  "scheme_file_name", "allowed_app_user"
+                                                                                  "mobile_number", "otp_authentication",
+                                                                                  "access_allowed", "third_party_api",
+                                                                                  "otp")))
     else:
         return Response("You don't have rights to perform this action")
 
@@ -255,6 +264,10 @@ def update_user(request):
         user.scheme_file_name = data.get("scheme_file_name")
         user.stock_file_name = data.get("stock_file_name")
         user.allowed_app_user = data.get("allowed_app_user")
+        user.mobile_number = data.get("mobile_number")
+        user.otp_authentication = data.get("otp_authentication", False)
+        user.access_allowed = data.get("access_allowed", {})
+        user.third_party_api = data.get("third_party_api", "")
         user.user.save()
         user.save()
         return Response("Success")
