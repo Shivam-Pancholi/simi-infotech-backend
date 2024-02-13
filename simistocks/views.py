@@ -182,7 +182,7 @@ class ObtainAuthToken(APIView):
                                  'is_approved': is_approved, 'device_name': device_name, 'user_app_id': user_app_id},
                                 status=status.HTTP_403_FORBIDDEN)
         print(6)
-        if User_obj.otp_authentication:
+        if User_obj.otp_authentication and User_obj.mobile_number:
             number = random.randint(1111, 9999)
             User_obj.otp = number
             numbers = User_obj.mobile_number
@@ -227,7 +227,12 @@ def register(request):
                                 msg_limit=request.data.get("msg_limit"),
                                 scheme_file_name=request.data.get("scheme_file_name"),
                                 stock_file_name=request.data.get("stock_file_name"),
-                                allowed_app_user=request.data.get("allowed_app_user"))
+                                allowed_app_user=request.data.get("allowed_app_user"),
+                                mobile_number=request.data.get("mobile_number"),
+                                otp_authentication=request.data.get("otp_authentication"),
+                                access_allowed=request.data.get("access_allowed"),
+                                third_party_api=request.data.get("third_party_api")
+                                )
         msg = "User Created Successfully"
     else:
         msg = "You don't have rights to perform this action"
@@ -399,6 +404,90 @@ def simi_whatsapp(request):
 @permission_classes([IsAuthenticated])
 def templates(request):
     user = Userdata.objects.filter(user__id=request.user.id).last()
+    if user.third_party_api:
+        return Response({"data": [{
+      "name": "text_with_image",
+      "components": [
+        {
+          "type": "HEADER",
+          "format": "IMAGE",
+          "example": {
+            "header_handle": []
+          }
+        },
+        {
+          "type": "BODY",
+          "text": "Hello, \\n{{1}}. \\n\\n*Simi Infotech*.",
+          "example": {
+            "body_text": [
+              [
+                "Welcome to simi"
+              ]
+            ]
+          }
+        }
+      ],
+      "language": "en_US",
+      "status": "APPROVED",
+      "category": "MARKETING",
+      "id": "1234159660829621",
+      "default_text": "",
+      "default_file": ""
+    },
+    {
+      "name": "files",
+      "components": [
+        {
+          "type": "HEADER",
+          "format": "DOCUMENT",
+          "example": {
+            "header_handle": []
+          }
+        },
+        {
+          "type": "BODY",
+          "text": "Hello, \\n{{1}}. \\n\\n*Simi Infotech Alerts*.",
+          "example": {
+            "body_text": [
+              [
+                "Welcome to simi Infotech"
+              ]
+            ]
+          }
+        }
+      ],
+      "language": "en_US",
+      "status": "APPROVED",
+      "category": "MARKETING",
+      "id": "739438117579441",
+      "default_text": "",
+      "default_file": ""
+    },
+    {
+      "name": "only_text",
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Hello, \\n{{1}}. \\n\\n*Simi Infotech Alerts*.",
+          "example": {
+            "body_text": [
+              [
+                "hello"
+              ]
+            ]
+          }
+        }
+      ],
+      "language": "en_US",
+      "status": "APPROVED",
+      "category": "MARKETING",
+      "id": "826005875438677",
+      "default_text": "",
+      "default_file": ""
+    },
+  ],
+  "msg_limit": "Unlimited"
+})
     whatsapp_account_id = user.whatsapp_account_id
     token = user.whatsapp_token
     default_txt = user.templates.get("msg", "")
