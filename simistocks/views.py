@@ -182,7 +182,9 @@ class ObtainAuthToken(APIView):
                                  'is_approved': is_approved, 'device_name': device_name, 'user_app_id': user_app_id},
                                 status=status.HTTP_403_FORBIDDEN)
         print(6)
-        if User_obj.otp_authentication:
+        otp_authentication = User_obj.otp_authentication
+        access_allowed = User_obj.access_allowed
+        if otp_authentication:
             number = random.randint(1111, 9999)
             User_obj.otp = number
             numbers = User_obj.mobile_number
@@ -205,7 +207,7 @@ class ObtainAuthToken(APIView):
             response = requests.request("POST", url, headers=headers, data=payload).json()
             User_obj.save()
         return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
-                         'access_allowed': User_obj.access_allowed, 'otp_authentication': User_obj.otp_authentication})
+                         'access_allowed': access_allowed, 'otp_authentication': otp_authentication})
 
 
 obtain_auth_token = ObtainAuthToken.as_view()
