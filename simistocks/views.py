@@ -434,7 +434,7 @@ def templates(request):
       "default_text": "",
       "default_file": ""
     }, {
-      "name": "files_w",
+      "name": "files",
       "components": [
         {
           "type": "HEADER",
