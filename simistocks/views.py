@@ -714,3 +714,12 @@ def ping(request):
         is_approved = False
     return Response({"is_approved": is_approved})
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def validate_otp(request):
+    User_obj = Userdata.objects.filter(user__id=request.user.id).last()
+    if request.data.get("otp") == User_obj.otp:
+        return Response("Success")
+    else:
+        return Response("Invalid Otp", status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)
