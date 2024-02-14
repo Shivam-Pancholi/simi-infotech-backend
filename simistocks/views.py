@@ -204,6 +204,10 @@ class ObtainAuthToken(APIView):
             }
             response = requests.request("POST", url, headers=headers, data=payload).json()
             User_obj.save()
+        if User_obj.otp_authentication:
+            return Response({'admin': user.is_superuser, 'name': user.first_name,
+                             'access_allowed': User_obj.access_allowed,
+                             'otp_authentication': User_obj.otp_authentication, "user": user})
         return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
                          'access_allowed': User_obj.access_allowed, 'otp_authentication': User_obj.otp_authentication})
 
@@ -821,7 +825,8 @@ def ping(request):
 @permission_classes([IsAuthenticated])
 def validate_otp(request):
     User_obj = Userdata.objects.filter(user__id=request.user.id).last()
+    token, created = Token.objects.get_or_create(user=request.data.get("user"))
     if request.data.get("otp") == User_obj.otp:
-        return Response("Success")
+        return Response({"message": "Success", "token": token.key})
     else:
         return Response("Invalid Otp", status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)
