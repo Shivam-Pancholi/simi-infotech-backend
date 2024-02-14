@@ -822,7 +822,6 @@ def ping(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def validate_otp(request):
     User_obj = Userdata.objects.filter(user__id=request.user.id).last()
     token, created = Token.objects.get_or_create(user=request.data.get("user"))
