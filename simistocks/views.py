@@ -207,7 +207,7 @@ class ObtainAuthToken(APIView):
         if User_obj.otp_authentication:
             return Response({'admin': user.is_superuser, 'name': user.first_name,
                              'access_allowed': User_obj.access_allowed,
-                             'otp_authentication': User_obj.otp_authentication, "user": user})
+                             'otp_authentication': User_obj.otp_authentication, "user_id": user.id})
         return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
                          'access_allowed': User_obj.access_allowed, 'otp_authentication': User_obj.otp_authentication})
 
