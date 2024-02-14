@@ -823,7 +823,7 @@ def ping(request):
 
 @api_view(['POST'])
 def validate_otp(request):
-    User_obj = Userdata.objects.filter(user__id=request.user.id).last()
+    User_obj = Userdata.objects.filter(user__id=request.data.get("user_id")).last()
     token, created = Token.objects.get_or_create(user__id=request.data.get("user_id"))
     if request.data.get("otp") == User_obj.otp:
         return Response({"message": "Success", "token": token.key})
