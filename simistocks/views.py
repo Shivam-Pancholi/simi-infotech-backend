@@ -823,8 +823,11 @@ def ping(request):
 
 @api_view(['POST'])
 def validate_otp(request):
-    User_obj = Userdata.objects.filter(user__id=request.data.get("user_id")).last()
-    token, created = Token.objects.get_or_create(user__id=request.data.get("user_id"))
+    user = User.objects.filter(id=request.data.get("user_id"), username=request.data.get("username")).last()
+    if not user:
+        Response("Something went wrong", status.HTTP_400_BAD_REQUEST)
+    User_obj = Userdata.objects.filter(user=user).last()
+    token, created = Token.objects.get_or_create(user=user)
     if request.data.get("otp") == User_obj.otp:
         return Response({"message": "Success", "token": token.key})
     else:
