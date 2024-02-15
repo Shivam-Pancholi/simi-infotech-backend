@@ -831,6 +831,7 @@ def validate_otp(request):
     print(User_obj)
     token, created = Token.objects.get_or_create(user=user)
     if request.data.get("otp") == User_obj.otp:
-        return Response({"message": "Success", "token": token.key})
+        return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
+                         'access_allowed': User_obj.access_allowed, 'otp_authentication': User_obj.otp_authentication})
     else:
         return Response("Invalid Otp", status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)
