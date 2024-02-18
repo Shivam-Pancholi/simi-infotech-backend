@@ -194,7 +194,7 @@ class ObtainAuthToken(APIView):
                                   "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
                                                                    "components": [{"type": "body",
                                                                                    "parameters": [{"type": "text",
-                                                                                                   "text": "Otp for %s"
+                                                                                                   "text": "Otp for %s "
                                                                                                            "verification is "
                                                                                                            "*%s*" % (user.username, number)}]}]
                                                                    }})
