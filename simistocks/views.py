@@ -760,7 +760,7 @@ def list_app_users(request):
         return Response(list(Manage_App_Access.objects.all().values("id", "user__user__email", "is_approved", "fcm_id",
                                                                     "access_allowed", "device_name", "device_details")))
     else:
-        app_access = Manage_App_Access.objects.filter(user__user_id=request.user.id).exclude(device_name="")
+        app_access = Manage_App_Access.objects.filter(user__user_id=request.user.id, device_name__isnull=False)
         if app_access:
             return Response(list(app_access.values("id", "user__user__email", "is_approved", "fcm_id", "access_allowed",
                                                                     "device_name", "device_details")))
