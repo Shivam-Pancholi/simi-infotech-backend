@@ -757,7 +757,7 @@ def simistocksdata(request):
 def list_app_users(request):
     admin = User.objects.filter(id=request.user.id).last().is_superuser
     if admin:
-        return Response(list(Manage_App_Access.objects.all().values("id", "user__user__email", "is_approved", "fcm_id",
+        return Response(list(Manage_App_Access.objects.filter(device_name__isnull=False).values("id", "user__user__email", "is_approved", "fcm_id",
                                                                     "access_allowed", "device_name", "device_details")))
     else:
         app_access = Manage_App_Access.objects.filter(user__user_id=request.user.id, device_name__isnull=False)
