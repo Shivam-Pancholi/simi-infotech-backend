@@ -28,6 +28,7 @@ from django.contrib.auth.models import User
 # from django.contrib.auth.password_validation import validate_password
 from datetime import datetime
 from rest_framework.parsers import MultiPartParser, FormParser
+from django.db.models import Q
 
 # class RegisterSerializer(serializers.ModelSerializer):
 #     email = serializers.EmailField(
@@ -714,7 +715,7 @@ def webhook(request):
         return HttpResponse(str("received"))
     else:
         print(request.GET)
-        return HttpResponse(dict(request.GET).get("hub.challenge", {}))
+        return HttpResponse(int(request.GET).get("hub.challenge"))
 
 
 @api_view(['GET'])
@@ -759,7 +760,7 @@ def list_app_users(request):
         return Response(list(Manage_App_Access.objects.all().values("id", "user__user__email", "is_approved", "fcm_id",
                                                                     "access_allowed", "device_name", "device_details")))
     else:
-        app_access = Manage_App_Access.objects.filter(user__user_id=request.user.id)
+        app_access = Manage_App_Access.objects.filter(user__user_id=request.user.id).exclude(device_name=None)
         if app_access:
             return Response(list(app_access.values("id", "user__user__email", "is_approved", "fcm_id", "access_allowed",
                                                                     "device_name", "device_details")))
