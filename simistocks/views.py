@@ -779,9 +779,9 @@ def update_app_user(request):
         else:
             app_access = Manage_App_Access.objects.filter(id=data.get("id")).last()
             app_access.is_approved = data.get("is_approved", False)
-            app_access.device_name = data.get("device_name")
-            app_access.device_details = data.get("device_details")
-            app_access.fcm_id = data.get("fcm_id")
+            app_access.device_name = data.get("device_name", app_access.device_name)
+            app_access.device_details = data.get("device_details", app_access.device_details)
+            app_access.fcm_id = data.get("fcm_id", app_access.fcm_id)
             app_access.access_allowed = data.get("access_allowed", {})
         app_access.save()
         return Response("Success")
@@ -793,10 +793,10 @@ def update_app_user(request):
             return Response("Success")
         elif app_access:
             app_access.is_approved = data.get("is_approved")
-            app_access.device_name = data.get("device_name")
-            app_access.device_details = data.get("device_details")
-            app_access.fcm_id = data.get("fcm_id")
-            app_access.access_allowed = data.get("access_allowed")
+            app_access.device_name = data.get("device_name", app_access.device_name)
+            app_access.device_details = data.get("device_details", app_access.device_details)
+            app_access.fcm_id = data.get("fcm_id", app_access.fcm_id)
+            app_access.access_allowed = data.get("access_allowed", {})
             app_access.save()
             return Response("Success")
         else:
