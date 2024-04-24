@@ -299,6 +299,15 @@ def update_user(request):
         user.third_party_api = data.get("third_party_api", "")
         user.user.save()
         user.save()
+        if data.get("access_allowed", {}):
+            app_users = Manage_App_Access.objects.filter(user=user)
+            for users in app_users:
+                app_access = users.access_allowed
+                for access in list(data.get("access_allowed", {}).keys()):
+                    if app_access.get(access, False):
+                        app_access[access] = data.get("access_allowed", {}).get(access)
+                users.access_allowed = app_access
+                users.save()
         return Response("Success")
     else:
         return Response("You don't have rights to perform this action")
@@ -315,6 +324,7 @@ def simi_whatsapp(request):
     token = user.whatsapp_token
     url = "https://graph.facebook.com/v15.0/%s/messages" % phone_id
     limit = user.msg_limit
+    third_party_api = user.third_party_api
     if limit < len(ast.literal_eval(request.data.get("phone_numbers"))):
         return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("phone_numbers"))))
     data = json.loads(request.data.get("data"))
@@ -329,7 +339,7 @@ def simi_whatsapp(request):
         # data_url = "https://king-prawn-app-4zv54.ondigitalocean.app" + user.template_img.url
         data_url = "https://admin.simiinfotech.com/" + user.template_img.url
         print(data_url)
-    if data.get("components") and data.get("name") not in ["only_text", "text_with_image", "text_button_image"]:
+    if data.get("components") and data.get("name") not in ["only_text", "text_with_image", "text_button_image"] and not third_party_api:
         if data.get("components")[0].get('type') == 'HEADER':
             types = data.get("components")[0].get("format")
             if types == 'TEXT':
@@ -360,48 +370,69 @@ def simi_whatsapp(request):
     for numbers in ast.literal_eval(request.data.get("phone_numbers")):
         if numbers in user.blocked_number:
             continue
-        if data.get("name") in ["only_text", "text_with_image", "text_button_image"]:
+        if third_party_api:
+            url = str(third_party_api) + "&receiverMobileNo=%s" % int(str(numbers))
             if data.get("name") == "only_text":
-                payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
-                                      "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
-                                                                       "components": [{"type": "body",
-                                                                                       "parameters": [{"type": "text",
-                                                                                                       "text": text}]}]
-                                                         }})
+                resp = requests.get(url + "&message=%s" % text).json()
+            elif data.get("name") in ["text_with_image", "text_with_file"]:
+                resp = requests.get(url + "&message=%s&fileurl=%s" % (text, data_url)).json()
+            elif data.get("name") in ["files"]:
+                resp = requests.get(url + "&fileurl=%s" % data_url).json()
+            if resp.get("messages", ""):
+                if not cache.get("msg_%s_%s" % (phone_id, numbers)):
+                    cache.set("msg_%s_%s" % (phone_id, numbers), "success", 60 * 60 * 24)
+                    data_dict[str(numbers)] = "success"
+                    limit_remaining = limit - 1
+                    user.msg_limit = limit_remaining
+                    user.save()
+                else:
+                    data_dict[str(numbers)] = "success"
             else:
-                payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
-                                      "type": "template",
-                                      "template": {"name": data.get("name"), "language": {"code": "en_US"},
-                                                   "components": [{"type": "header", "parameters": [{"type": "image",
-                                                                                                     "image": {"link": data_url}}]},
-                                                                  {"type": "body", "parameters": [{"type": "text",
-                                                                                                   "text": text}]}]
-                                                   }})
+                data_dict[str(numbers)] = "error"
+            continue
         else:
-            payload = json.dumps({
-              "messaging_product": "whatsapp",
-              "to": int('91' + str(numbers)),
-              "type": "template",
-              "template": template
-            })
-        headers = {
-          'Authorization': 'Bearer %s' % token,
-          'Content-Type': 'application/json'
-        }
-        response = requests.request("POST", url, headers=headers, data=payload).json()
-        if response.get("messages"):
-            if response.get("messages")[0]:
-                if response.get("messages")[0].get("id", ""):
-                    if not cache.get("msg_%s_%s" % (phone_id, numbers)):
-                        cache.set("msg_%s_%s" % (phone_id, numbers), "success", 60 * 60 * 24)
-                        data_dict[str(numbers)] = "success"
-                        limit_remaining = limit - 1
-                        user.msg_limit = limit_remaining
-                        user.save()
-                    else:
-                        data_dict[str(numbers)] = "success"
-        else:
-            data_dict[str(numbers)] = "error"
+            if data.get("name") in ["only_text", "text_with_image", "text_button_image"]:
+                if data.get("name") == "only_text":
+                    payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
+                                          "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
+                                                                           "components": [{"type": "body",
+                                                                                           "parameters": [{"type": "text",
+                                                                                                           "text": text}]}]
+                                                             }})
+                else:
+                    payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
+                                          "type": "template",
+                                          "template": {"name": data.get("name"), "language": {"code": "en_US"},
+                                                       "components": [{"type": "header", "parameters": [{"type": "image",
+                                                                                                         "image": {"link": data_url}}]},
+                                                                      {"type": "body", "parameters": [{"type": "text",
+                                                                                                       "text": text}]}]
+                                                       }})
+            else:
+                payload = json.dumps({
+                  "messaging_product": "whatsapp",
+                  "to": int('91' + str(numbers)),
+                  "type": "template",
+                  "template": template
+                })
+            headers = {
+              'Authorization': 'Bearer %s' % token,
+              'Content-Type': 'application/json'
+            }
+            response = requests.request("POST", url, headers=headers, data=payload).json()
+            if response.get("messages"):
+                if response.get("messages")[0]:
+                    if response.get("messages")[0].get("id", ""):
+                        if not cache.get("msg_%s_%s" % (phone_id, numbers)):
+                            cache.set("msg_%s_%s" % (phone_id, numbers), "success", 60 * 60 * 24)
+                            data_dict[str(numbers)] = "success"
+                            limit_remaining = limit - 1
+                            user.msg_limit = limit_remaining
+                            user.save()
+                        else:
+                            data_dict[str(numbers)] = "success"
+            else:
+                data_dict[str(numbers)] = "error"
     return Response(data_dict)
 
 
@@ -758,7 +789,7 @@ def list_app_users(request):
     admin = User.objects.filter(id=request.user.id).last().is_superuser
     if admin:
         return Response(list(Manage_App_Access.objects.filter(device_name__isnull=False).values("id", "user__user__email", "is_approved", "fcm_id",
-                                                                    "access_allowed", "device_name", "device_details")))
+                                                                    "access_allowed", "device_name", "device_details","user__access_allowed")))
     else:
         app_access = Manage_App_Access.objects.filter(user__user_id=request.user.id, device_name__isnull=False)
         if app_access:
