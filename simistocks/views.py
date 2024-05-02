@@ -306,7 +306,7 @@ def update_user(request):
             for users in app_users:
                 app_access = users.access_allowed
                 for access in list(data.get("access_allowed").keys()):
-                    if data.get("access_allowed").get(access, False):
+                    if data.get("access_allowed").get(access):
                         app_access[access] = False
                     else:
                         app_access[access] = None
