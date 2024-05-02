@@ -300,12 +300,14 @@ def update_user(request):
         user.user.save()
         user.save()
         if data.get("access_allowed", {}):
-            app_users = Manage_App_Access.objects.filter(user=user)
+            app_users = Manage_App_Access.objects.filter(user_id=user.id)
             for users in app_users:
                 app_access = users.access_allowed
                 for access in list(data.get("access_allowed", {}).keys()):
                     if app_access.get(access, False):
-                        app_access[access] = data.get("access_allowed", {}).get(access)
+                        app_access[access] = False
+                    else:
+                        app_access[access] = None
                 users.access_allowed = app_access
                 users.save()
         return Response("Success")
