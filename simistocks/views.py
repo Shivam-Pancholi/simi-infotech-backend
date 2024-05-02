@@ -163,7 +163,11 @@ class ObtainAuthToken(APIView):
                 print(2)
                 if len(user_access) + 1 <= User_obj.allowed_app_user:
                     user_app = Manage_App_Access.objects.create(user=User_obj, fcm_id=request.data.get("fcmToken"),
-                                                     device_details=request.data.get("deviceDetails"))
+                                                     device_details=request.data.get("deviceDetails"),
+                                                                access_allowed={"admin": None, "sales": None,
+                                                                                    "stock": None, "whatsAppBulk": None,
+                                                                                   "blockList": None, "quickWA": None,
+                                                                                   "attachment": None, "device": None})
                     user_app_id = user_app.id
                     is_approved = False
                     print("2", user_app_id, user_app)
@@ -235,7 +239,10 @@ def register(request):
                                 allowed_app_user=request.data.get("allowed_app_user"),
                                 mobile_number=request.data.get("mobile_number"),
                                 otp_authentication=request.data.get("otp_authentication"),
-                                access_allowed=request.data.get("access_allowed"),
+                                access_allowed=request.data.get("access_allowed", {"admin": None, "sales": None,
+                                                                                    "stock": None, "whatsAppBulk": None,
+                                                                                   "blockList": None, "quickWA": None,
+                                                                                   "attachment": None, "device": None}),
                                 third_party_api=request.data.get("third_party_api")
                                 )
         msg = "User Created Successfully"
