@@ -265,6 +265,7 @@ def list_users(request):
 @permission_classes([IsAuthenticated])
 def update_user(request):
     data = request.data
+    print(data)
     if data.get("blocked_numbers", []):
         user = Userdata.objects.filter(user__id=request.user.id).last()
         user.blocked_number = data.get("blocked_numbers")
@@ -299,15 +300,17 @@ def update_user(request):
         user.third_party_api = data.get("third_party_api", "")
         user.user.save()
         user.save()
-        if data.get("access_allowed", {}):
+        print("access", data.get("access_allowed"))
+        if data.get("access_allowed"):
             app_users = Manage_App_Access.objects.filter(user_id=user.id)
             for users in app_users:
                 app_access = users.access_allowed
-                for access in list(data.get("access_allowed", {}).keys()):
+                for access in list(data.get("access_allowed").keys()):
                     if app_access.get(access, False):
                         app_access[access] = False
                     else:
                         app_access[access] = None
+                print(app_access)
                 users.access_allowed = app_access
                 users.save()
         return Response("Success")
