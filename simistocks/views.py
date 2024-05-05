@@ -153,6 +153,7 @@ class ObtainAuthToken(APIView):
             print("user_obj", User_obj)
             user_access = Manage_App_Access.objects.filter(user=User_obj)
             print("user_access", user_access)
+            print("fcm_token", request.data.get("fcmToken"))
             if user_access.filter(fcm_id=request.data.get("fcmToken")).exists():
                 print(1)
                 is_approved = user_access.filter(fcm_id=request.data.get("fcmToken")).last().is_approved
