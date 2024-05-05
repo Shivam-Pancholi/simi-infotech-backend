@@ -162,6 +162,7 @@ class ObtainAuthToken(APIView):
                 device_name = user_access.filter(fcm_id=request.data.get("fcmToken")).last().device_name
                 user_app_id = user_access.filter(fcm_id=request.data.get("fcmToken")).last().id
                 print("1st data", is_approved, device_name, user_app_id)
+                access_allowed = user_access.filter(fcm_id=request.data.get("fcmToken")).last().access_allowed
                 user_not_found = False
             elif user_access:
                 for device in user_access:
@@ -169,6 +170,7 @@ class ObtainAuthToken(APIView):
                         is_approved = device.is_approved
                         device_name = device.device_name
                         user_app_id = device.id
+                        access_allowed = device.access_allowed
                         device.fcm_id = request.data.get("fcmToken")
                         device.save()
                         user_not_found = False
@@ -176,12 +178,10 @@ class ObtainAuthToken(APIView):
             if user_not_found:
                 print(2)
                 if len(user_access) + 1 <= User_obj.allowed_app_user:
+                    access_allowed_dict = {k: False if v else v for k, v in User_obj.access_allowed.items()}
                     user_app = Manage_App_Access.objects.create(user=User_obj, fcm_id=request.data.get("fcmToken"),
                                                      device_details=request.data.get("deviceDetails"),
-                                                                access_allowed={"admin": None, "sales": None,
-                                                                                    "stock": None, "whatsAppBulk": None,
-                                                                                   "blockList": None, "quickWA": None,
-                                                                                   "attachment": None, "device": None})
+                                                                access_allowed=access_allowed_dict)
                     user_app_id = user_app.id
                     is_approved = False
                     print("2", user_app_id, user_app)
@@ -194,7 +194,7 @@ class ObtainAuthToken(APIView):
                 print(4)
                 return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
                                  'is_approved': is_approved, 'device_name': device_name, 'user_app_id': user_app_id,
-                                 'access_allowed': user_access.last().access_allowed})
+                                 'access_allowed': access_allowed})
             else:
                 print(5)
                 return Response({'token': token.key, 'admin': user.is_superuser, 'name': user.first_name,
