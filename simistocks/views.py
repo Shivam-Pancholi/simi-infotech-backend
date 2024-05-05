@@ -149,10 +149,12 @@ class ObtainAuthToken(APIView):
         device_name = ''
         token, created = Token.objects.get_or_create(user=user)
         User_obj = Userdata.objects.filter(user=user).last()
+        user_not_found = True
         if request.data.get('clientType') == 'mobile-app':
             print("user_obj", User_obj)
             user_access = Manage_App_Access.objects.filter(user=User_obj)
             print("user_access", user_access)
+
             print("fcm_token", request.data.get("fcmToken"))
             if user_access.filter(fcm_id=request.data.get("fcmToken")).exists():
                 print(1)
@@ -160,7 +162,18 @@ class ObtainAuthToken(APIView):
                 device_name = user_access.filter(fcm_id=request.data.get("fcmToken")).last().device_name
                 user_app_id = user_access.filter(fcm_id=request.data.get("fcmToken")).last().id
                 print("1st data", is_approved, device_name, user_app_id)
-            else:
+                user_not_found = False
+            elif user_access:
+                for device in user_access:
+                    if device.device_details.get("uuid") == request.data.get("deviceDetails").get("uuid"):
+                        is_approved = device.is_approved
+                        device_name = device.device_name
+                        user_app_id = device.id
+                        device.fcm_id = request.data.get("fcmToken")
+                        device.save()
+                        user_not_found = False
+                        break
+            if user_not_found:
                 print(2)
                 if len(user_access) + 1 <= User_obj.allowed_app_user:
                     user_app = Manage_App_Access.objects.create(user=User_obj, fcm_id=request.data.get("fcmToken"),
