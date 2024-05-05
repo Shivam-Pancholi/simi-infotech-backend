@@ -595,7 +595,11 @@ def send_wp_msg(request):
                                                                               {"type": "body", "parameters": [{"type": "text","text": request.query_params.get(
                                                                                                        "message", "Please find your attachment above")}]}]}})
         else:
-            if "OTP" in request.query_params.get("message").upper().split(" ") and request.query_params.get('token') == "107427908838031" :
+            if ("OTP" in request.query_params.get("message").upper().split(" ")
+                or ",OTP" in request.query_params.get("message").upper().split(" ")
+                or "OTP," in request.query_params.get("message").upper().split(" ")) \
+                    and request.query_params.get('token') == "107427908838031" :
+                print("In")
                 payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),
                                       "type": "template",
                                       "template": {"name": "otp_auth", "language": {"code": "en_US"},
