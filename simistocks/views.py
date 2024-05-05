@@ -72,7 +72,7 @@ def simidata(request):
     for file in file_name:
         resp = requests.get("http://simistocks.com/login/%s.json" % file)
         print(resp)
-        resp = resp.json().get("ENVELOPE")
+        resp = resp.json().get("ENVELOPE", "")
         if resp == data.get("last_updated_data"):
             data = data.get("data")
             return Response(sum(list(data.values()), []))
@@ -581,13 +581,23 @@ def send_wp_msg(request):
                                                                               {"type": "body", "parameters": [{"type": "text","text": request.query_params.get(
                                                                                                        "message", "Please find your attachment above")}]}]}})
         else:
-            payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),
-                                  "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
-                                                                   "components": [{"type": "body",
-                                                                                   "parameters": [{"type": "text",
-                                                                                                   "text": request.query_params.get(
-                                                                                                       "message")}]}]
-                                                                   }})
+            if "OTP" in request.query_params.get("message").upper().split(" ") and request.query_params.get('token') == "107427908838031" :
+                payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),
+                                      "type": "template",
+                                      "template": {"name": "otp_auth", "language": {"code": "en_US"},
+                                                   "components": [{"type": "body",
+                                                                   "parameters": [{"type": "text",
+                                                                                   "text": request.query_params.get(
+                                                                                       "message")}]}]
+                                                   }})
+            else:
+                payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),
+                                      "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
+                                                                       "components": [{"type": "body",
+                                                                                       "parameters": [{"type": "text",
+                                                                                                       "text": request.query_params.get(
+                                                                                                           "message")}]}]
+                                                                       }})
         phone_id = user.whatsapp_phone_no_id
         token = user.whatsapp_token
         limit = user.msg_limit
