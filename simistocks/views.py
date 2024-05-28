@@ -604,6 +604,7 @@ def send_wp_msg(request):
                 or "OTP," in request.query_params.get("message").upper().split(" ")
                 or "OTP" in request.query_params.get("message").upper()) \
                     and request.query_params.get('token') == "107427908838031":
+                import datetime
                 otp = ""
                 print("*****************INSIDE OTP TEMPLATE****************")
                 # regex_patterns = [r"\d{4}", r"[A-Za-z]{2}\d{6}", ]
