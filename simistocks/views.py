@@ -615,7 +615,7 @@ def send_wp_msg(request):
                 # if otp:
                 app_user = Manage_App_Access.objects.filter(otp_receiver_number=number)
                 for app in app_user:
-                    app.otp_received = {"otp": request.query_params.get("message"), "last_updated_time": str(datetime.datetime.utcnow()) + datetime.timedelta(hours=5, minutes=30)}
+                    app.otp_received = {"otp": request.query_params.get("message"), "last_updated_time": str(datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30))}
                     app.save()
                 payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),
                                       "type": "template",
