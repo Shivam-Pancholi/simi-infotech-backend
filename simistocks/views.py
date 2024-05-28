@@ -846,7 +846,7 @@ def list_app_users(request):
     admin = User.objects.filter(id=request.user.id).last().is_superuser
     if admin:
         return Response(list(Manage_App_Access.objects.filter(device_name__isnull=False).values("id", "user__user__email", "is_approved", "fcm_id",
-                                                                    "access_allowed", "device_name", "device_details","user__access_allowed")))
+                                                                    "access_allowed", "device_name", "device_details","user__access_allowed", "otp_receiver_number")))
     else:
         app_access = Manage_App_Access.objects.filter(user__user_id=request.user.id, device_name__isnull=False)
         if app_access:
@@ -871,6 +871,8 @@ def update_app_user(request):
             app_access.device_details = data.get("device_details", app_access.device_details)
             app_access.fcm_id = data.get("fcm_id", app_access.fcm_id)
             app_access.access_allowed = data.get("access_allowed", {})
+            if data.get("otp_receiver_number"):
+                app_access.otp_receiver_number = data.get("otp_receiver_number")
         app_access.save()
         return Response("Success")
     else:
