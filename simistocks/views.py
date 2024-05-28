@@ -606,16 +606,16 @@ def send_wp_msg(request):
                     and request.query_params.get('token') == "107427908838031":
                 otp = ""
                 print("*****************INSIDE OTP TEMPLATE****************")
-                regex_patterns = [r"\d{4}", r"[A-Za-z]{2}\d{6}", ]
-                for pattern in regex_patterns:
-                    match = re.search(pattern, request.query_params.get("message"))
-                    if match:
-                        otp = match.group()
-                if otp:
-                    app_user = Manage_App_Access.objects.filter(otp_receiver_number=number)
-                    for app in app_user:
-                        app.otp_received = {"otp": otp, "last_updated_time": str(datetime.now())}
-                        app.save()
+                # regex_patterns = [r"\d{4}", r"[A-Za-z]{2}\d{6}", ]
+                # for pattern in regex_patterns:
+                #     match = re.search(pattern, request.query_params.get("message"))
+                #     if match:
+                #         otp = match.group()
+                # if otp:
+                app_user = Manage_App_Access.objects.filter(otp_receiver_number=number)
+                for app in app_user:
+                    app.otp_received = {"otp": request.query_params.get("message"), "last_updated_time": str(datetime.datetime.utcnow()) + datetime.timedelta(hours=5, minutes=30)}
+                    app.save()
                 payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),
                                       "type": "template",
                                       "template": {"name": "otp_auth", "language": {"code": "en_US"},
