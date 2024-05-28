@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 import ast
 import random
+import re
 
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes
@@ -603,7 +604,18 @@ def send_wp_msg(request):
                 or "OTP," in request.query_params.get("message").upper().split(" ")
                 or "OTP" in request.query_params.get("message").upper()) \
                     and request.query_params.get('token') == "107427908838031":
+                otp = ""
                 print("*****************INSIDE OTP TEMPLATE****************")
+                regex_patterns = [r"\d{4}", r"[A-Za-z]{2}\d{6}", ]
+                for pattern in regex_patterns:
+                    match = re.search(pattern, request.query_params.get("message"))
+                    if match:
+                        otp = match.group()
+                if otp:
+                    app_user = Manage_App_Access.objects.filter(otp_receiver_number=number)
+                    for app in app_user:
+                        app.otp_received = {"otp": otp, "last_updated_time": str(datetime.now())}
+                        app.save()
                 payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),
                                       "type": "template",
                                       "template": {"name": "otp_auth", "language": {"code": "en_US"},
@@ -911,3 +923,12 @@ def validate_otp(request):
                          'access_allowed': User_obj.access_allowed, 'otp_authentication': User_obj.otp_authentication})
     else:
         return Response("Invalid Otp", status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_tally_otp(request):
+    user_otp = Manage_App_Access.objects.filter(id=request.query_params.get("id"))
+    if user_otp:
+        return Response(user_otp.last().otp_received)
+    return Response({"otp": None, "last_updated_time": None})

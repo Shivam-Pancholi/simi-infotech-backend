@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path
 from simistocks.views import simidata, list_users, update_user, simi_whatsapp, templates, send_wp_msg, delete_data, \
     exchange_wp_msg, default_data, get_default_data, webhook, simistocksdata, list_app_users, update_app_user, \
-    block_number_details, ping, validate_otp
+    block_number_details, ping, validate_otp, get_tally_otp
 
 urlpatterns = [
     path('simidata', simidata),
@@ -21,5 +21,6 @@ urlpatterns = [
     path("update_app_user", update_app_user),
     path("block_number_details", block_number_details),
     path("ping", ping),
-    path("validate_otp", validate_otp)
+    path("validate_otp", validate_otp),
+    path("get_tally_otp", get_tally_otp)
 ]

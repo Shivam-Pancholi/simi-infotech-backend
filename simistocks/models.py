@@ -30,3 +30,5 @@ class Manage_App_Access(models.Model):
     access_allowed = models.JSONField(default=dict)
     device_name = models.CharField(max_length=4096, null=True, blank=True)
     device_details = models.JSONField(default=dict)
+    otp_receiver_number = models.CharField(max_length=2048, null=True, blank=True)
+    otp_received = models.JSONField(default=dict)
