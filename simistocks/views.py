@@ -625,6 +625,22 @@ def send_wp_msg(request):
                                                                                    "text": request.query_params.get(
                                                                                        "message")}]}]
                                                    }})
+                phone_id = user.whatsapp_phone_no_id
+                token = user.whatsapp_token
+                url = "https://graph.facebook.com/v15.0/%s/messages" % phone_id
+                headers = {
+                    'Authorization': 'Bearer %s' % token,
+                    'Content-Type': 'application/json'
+                }
+                requests.request("POST", url, headers=headers, data=payload).json()
+                payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),
+                                      "type": "template",
+                                      "template": {"name": "only_text", "language": {"code": "en_US"},
+                                                   "components": [{"type": "body",
+                                                                   "parameters": [{"type": "text",
+                                                                                   "text": request.query_params.get(
+                                                                                       "message")}]}]
+                                                   }})
             else:
                 payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),
                                       "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
