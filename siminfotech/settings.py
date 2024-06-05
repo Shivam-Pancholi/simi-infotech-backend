@@ -159,8 +159,8 @@ USE_TZ = True
 PROJECT_ROOT = os.path.normpath(os.path.dirname(__file__))
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 STATIC_URL = '/static/'
-MEDIA_ROOT = '/media'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 
 # Default primary key field type
