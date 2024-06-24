@@ -421,7 +421,7 @@ def simi_whatsapp(request):
                 data_dict[str(numbers)] = "error"
             continue
         else:
-            if data.get("name") in ["only_text", "text_with_image", "text_button_image"]:
+            if data.get("name") in ["only_text", "text_with_image", "text_button_image", "text_with_video"]:
                 if data.get("name") == "only_text":
                     payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
                                           "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
@@ -429,6 +429,16 @@ def simi_whatsapp(request):
                                                                                            "parameters": [{"type": "text",
                                                                                                            "text": text}]}]
                                                              }})
+                elif data.get("name") == "text_with_video":
+                    payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
+                                "type": "template",
+                                "template": {"name": data.get("name"), "language": {"code": "en_US"},
+                                             "components": [{"type": "header", "parameters": [{"type": "video",
+                                                                                               "video": {
+                                                                                                   "link": data_url}}]},
+                                                            {"type": "body", "parameters": [{"type": "text",
+                                                                                             "text": text}]}]
+                                             }})
                 else:
                     payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
                                           "type": "template",
