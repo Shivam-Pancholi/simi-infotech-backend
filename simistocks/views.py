@@ -840,9 +840,9 @@ def simistocksdata(request):
     scheme_file_name = user.scheme_file_name.split(",")
     db_list = []
     schemes = {}
-    if not scheme_file_name:
-        return Response({"message": "No file is linked to this account"},
-                        status=status.HTTP_404_NOT_FOUND)
+    # if not scheme_file_name:
+    #     return Response({"message": "No file is linked to this account"},
+    #                     status=status.HTTP_404_NOT_FOUND)
     if scheme_file_name:
         for schemes_file in scheme_file_name:
             resp = requests.get("http://simistocks.com/login/%s.json" % schemes_file)
