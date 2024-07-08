@@ -615,50 +615,50 @@ def send_wp_msg(request):
                                                                               {"type": "body", "parameters": [{"type": "text","text": request.query_params.get(
                                                                                                        "message", "Please find your attachment above")}]}]}})
         else:
-            if ("OTP" in request.query_params.get("message").upper().split(" ")
-                or ",OTP" in request.query_params.get("message").upper().split(" ")
-                or "OTP," in request.query_params.get("message").upper().split(" ")
-                or "OTP" in request.query_params.get("message").upper()) \
-                    and request.query_params.get('token') == "107427908838031":
-                print("*****************INSIDE OTP TEMPLATE****************")
-                # regex_patterns = [r"\d{4}", r"[A-Za-z]{2}\d{6}", ]
-                # for pattern in regex_patterns:
-                #     match = re.search(pattern, request.query_params.get("message"))
-                #     if match:
-                #         otp = match.group()
-                # if otp:
-                payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),
-                                      "type": "template",
-                                      "template": {"name": "otp_auth", "language": {"code": "en_US"},
-                                                   "components": [{"type": "body",
-                                                                   "parameters": [{"type": "text",
-                                                                                   "text": request.query_params.get(
-                                                                                       "message")}]}]
-                                                   }})
-                phone_id = user.whatsapp_phone_no_id
-                token = user.whatsapp_token
-                url = "https://graph.facebook.com/v15.0/%s/messages" % phone_id
-                headers = {
-                    'Authorization': 'Bearer %s' % token,
-                    'Content-Type': 'application/json'
-                }
-                requests.request("POST", url, headers=headers, data=payload).json()
-                payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),
-                                      "type": "template",
-                                      "template": {"name": "only_text", "language": {"code": "en_US"},
-                                                   "components": [{"type": "body",
-                                                                   "parameters": [{"type": "text",
-                                                                                   "text": request.query_params.get(
-                                                                                       "message")}]}]
-                                                   }})
-            else:
-                payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),
-                                      "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
-                                                                       "components": [{"type": "body",
-                                                                                       "parameters": [{"type": "text",
-                                                                                                       "text": request.query_params.get(
-                                                                                                           "message")}]}]
-                                                                       }})
+            # if ("OTP" in request.query_params.get("message").upper().split(" ")
+            #     or ",OTP" in request.query_params.get("message").upper().split(" ")
+            #     or "OTP," in request.query_params.get("message").upper().split(" ")
+            #     or "OTP" in request.query_params.get("message").upper()) \
+            #         and request.query_params.get('token') == "107427908838031":
+            #     print("*****************INSIDE OTP TEMPLATE****************")
+            #     # regex_patterns = [r"\d{4}", r"[A-Za-z]{2}\d{6}", ]
+            #     # for pattern in regex_patterns:
+            #     #     match = re.search(pattern, request.query_params.get("message"))
+            #     #     if match:
+            #     #         otp = match.group()
+            #     # if otp:
+            #     payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),
+            #                           "type": "template",
+            #                           "template": {"name": "otp_auth", "language": {"code": "en_US"},
+            #                                        "components": [{"type": "body",
+            #                                                        "parameters": [{"type": "text",
+            #                                                                        "text": request.query_params.get(
+            #                                                                            "message")}]}]
+            #                                        }})
+            #     phone_id = user.whatsapp_phone_no_id
+            #     token = user.whatsapp_token
+            #     url = "https://graph.facebook.com/v15.0/%s/messages" % phone_id
+            #     headers = {
+            #         'Authorization': 'Bearer %s' % token,
+            #         'Content-Type': 'application/json'
+            #     }
+            #     requests.request("POST", url, headers=headers, data=payload).json()
+            #     payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),
+            #                           "type": "template",
+            #                           "template": {"name": "only_text", "language": {"code": "en_US"},
+            #                                        "components": [{"type": "body",
+            #                                                        "parameters": [{"type": "text",
+            #                                                                        "text": request.query_params.get(
+            #                                                                            "message")}]}]
+            #                                        }})
+            # else:
+            payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + number),
+                                  "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
+                                                                   "components": [{"type": "body",
+                                                                                   "parameters": [{"type": "text",
+                                                                                                   "text": request.query_params.get(
+                                                                                                       "message")}]}]
+                                                                   }})
         phone_id = user.whatsapp_phone_no_id
         token = user.whatsapp_token
         limit = user.msg_limit
