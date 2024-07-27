@@ -32,3 +32,9 @@ class Manage_App_Access(models.Model):
     device_details = models.JSONField(default=dict)
     otp_receiver_number = models.CharField(max_length=2048, null=True, blank=True)
     otp_received = models.JSONField(default=dict)
+
+
+class Whatsapp_Data(models.Model):
+    user = models.ForeignKey(Userdata, on_delete=models.PROTECT, null=True, blank=True)
+    module = models.TextField(null=True, blank=False)
+    data = models.JSONField(default=dict)

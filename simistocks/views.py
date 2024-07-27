@@ -817,19 +817,27 @@ def get_default_data(request):
 
 
 @csrf_exempt
-def webhook(request):
+def webhook(request, last_value):
     if request.method == 'POST':
         # Get the incoming message data
-        data = dict(request.POST)
+        data = request.POST.dict()  # Convert QueryDict to a regular dictionary
         print(data)
+        statuses = data.get('entry')[0].get("changes")[0].get("value").get("statuses")[0].get("status")
+        message_id = data.get('entry')[0].get("changes")[0].get("value").get("statuses")[0].get("id")
         sender_id = data.get('From', '')
         message_text = data.get('Body', '')
-        print("sender_id", sender_id)
+        print("sender_id", sender_id, statuses, message_id)
         print("mess", message_text)
-        return HttpResponse(str("received"))
+
+        # Extract the last part of the URL
+        # print(request.path)
+        # last_value = request.path.split('/')[-1]
+        print("Last value from URL:", last_value)
+
+        return HttpResponse("received")
     else:
         print(request.GET)
-        return HttpResponse(int(request.GET).get("hub.challenge"))
+        return HttpResponse(int(request.GET.get("hub.challenge", 0)))
 
 
 @api_view(['GET'])

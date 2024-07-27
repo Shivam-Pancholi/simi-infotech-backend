@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import os
+import sentry_sdk
 import sys
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -72,6 +73,7 @@ INSTALLED_APPS = [
     'simistocks',
     'rest_framework.authtoken',
     "corsheaders",
+    'djangoql',
 ]
 
 MIDDLEWARE = [
@@ -172,3 +174,28 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 if 'DATABASE_URL' in os.environ:
     import dj_database_url
     DATABASES = {'default': dj_database_url.config()}
+
+sentry_sdk.init(
+    dsn="https://8e646008cfeff53cd89952a3c023655e@o4507553598275584.ingest.de.sentry.io/4507554363736144",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    # profiles_sample_rate=1.0,
+)
+
+DJANGOQL = {
+    'MODELS': [
+        'yourapp.Userdata',
+        'yourapp.Manage_App_Access',
+        'yourapp.Whatsapp_Data',
+    ],
+    'PROVIDERS': {
+        'yourapp.Userdata': 'yourapp.admin.UserdataAdmin',
+        'yourapp.Manage_App_Access': 'yourapp.admin.ManageAppAccessAdmin',
+        'yourapp.Whatsapp_Data': 'yourapp.admin.WhatsappDataAdmin',
+    }
+}
+

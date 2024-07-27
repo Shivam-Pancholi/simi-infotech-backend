@@ -15,7 +15,7 @@ urlpatterns = [
     path('exchange_wp_msg', exchange_wp_msg),
     path('default_data', default_data),
     path('get_default_data', get_default_data),
-    path('webhook', webhook),
+    path('webhook/<path:last_value>/', webhook),
     path('simistocksdata', simistocksdata),
     path("list_app_users", list_app_users),
     path("update_app_user", update_app_user),
