@@ -969,3 +969,449 @@ def get_tally_otp(request):
     if user_otp:
         return Response(user_otp.last().otp_received)
     return Response({"otp": None, "last_updated_time": None})
+
+
+##################### NEW API FOR NEW PLATFORM ##########################
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def sales(request):
+    user = Userdata.objects.filter(user_id=request.user.id).first()
+    file_name = (user.file_name).split(",")
+    data = user.data
+    db_dict = {}
+    final_list = []
+    if not file_name:
+        return Response({"message": "No file is linked to this account"},
+                        status=status.HTTP_404_NOT_FOUND)
+    for file in file_name:
+        resp = requests.get("http://simistocks.com/login/%s.json" % file)
+        print(resp)
+        resp = resp.json().get("ENVELOPE", "")
+        if resp == data.get("last_updated_data"):
+            data = data.get("data")
+            return Response(sum(list(data.values()), []))
+        last_data = copy.deepcopy(resp)
+        for k, v in resp.items():
+            v["id"] = k.split("_")[1]
+            v["row"] = k
+            if db_dict.get(v.get('K1')):
+                db_dict.get(v.get('K1')).append(v)
+            else:
+                db_dict[v.get('K1')] = []
+                db_dict.get(v.get('K1')).append(v)
+            if data:
+                if data.get("data").get(v.get('K1')):
+                    del data["data"][v.get('K1')]
+    if not data:
+        data = dict(sorted(db_dict.items(), key=lambda x: datetime.strptime(x[0], '%d-%m-%Y'), reverse=False))
+        user.data = {"data": data, "last_updated_data": resp}
+    else:
+        data.get("data").update(db_dict)
+        data = dict(sorted(data.get("data").items(), key=lambda x: datetime.strptime(x[0], '%d-%m-%Y'), reverse=False))
+        user.data = {"data": data, "last_updated_data": last_data}
+    user.save()
+    for stock in sum(list(data.values()), []):
+        final_list.append({"date": stock.get("k1"), "customer_name": stock.get("k4"), "stock_item": stock.get("k6"),
+                           "godown": stock.get("k9"), "qty": stock.get("k10"), "total": stock.get("k11"),
+                           "finance_name": stock.get("k12"), "imei_number": stock.get("k8"), "brand": stock.get("k13"),
+                           "salesman": stock.get("k14"), "vch_type": stock.get("k2"), "invoice_no": stock.get("k3"),
+                           "contact": stock.get("k5"), "stock_group": stock.get("k7"), "category": stock.get("k15"),
+                           "stock_alias": stock.get("k16"), "id": stock.get("id")})
+    return Response(sum(list(data.values()), []))
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def stocks(request):
+    user = Userdata.objects.filter(user_id=request.user.id).first()
+    stock_file_name = user.stock_file_name.split(",")
+    scheme_file_name = user.scheme_file_name.split(",")
+    db_list = []
+    schemes = {}
+    if scheme_file_name:
+        for schemes_file in scheme_file_name:
+            resp = requests.get("http://simistocks.com/login/%s.json" % schemes_file)
+            resp = resp.json().get("ENVELOPE")
+            for k, v in resp.items():
+                if not (datetime.strptime(v.get("J3"), '%d-%m-%Y').date() <= datetime.now().date() <= datetime.strptime(v.get("J4"), '%d-%m-%Y').date()):
+                    continue
+                if not schemes.get(v.get("J1")):
+                    schemes[v.get("J1")] = []
+                    schemes[v.get("J1")].append(v)
+                else:
+                    schemes[v.get("J1")].append(v)
+    for file in stock_file_name:
+        resp = requests.get("http://simistocks.com/login/%s.json" % file)
+        resp = resp.json().get("ENVELOPE")
+        for k, v in resp.items():
+            stock_dict = {}
+            stock_dict["file_name"] = v.get("a1")
+            stock_dict["stock_item"] = v.get("b1")
+            stock_dict["stock_group"] = v.get("c1")
+            stock_dict["shop"] = v.get("d1")
+            stock_dict["qty"] = v.get("e1")
+            stock_dict["mop"] = v.get("f1")
+            stock_dict["id"] = k.split("_")[1]
+            stock_dict["offers"] = schemes.get(v.get("c1", ""), [])
+            db_list.append(stock_dict)
+    return Response(db_list)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def wa_templates(request):
+    user = Userdata.objects.filter(user__id=request.user.id).last()
+    if user.third_party_api:
+        return Response({"data": [{
+      "name": "text_with_image",
+      "components": [
+        {
+          "type": "HEADER",
+          "format": "IMAGE",
+          "example": {
+            "header_handle": []
+          }
+        },
+        {
+          "type": "BODY",
+          "text": "Hello, \\n{{1}}. \\n\\n*Simi Infotech*.",
+          "example": {
+            "body_text": [
+              [
+                "Welcome to simi"
+              ]
+            ]
+          }
+        }
+      ],
+      "language": "en_US",
+      "status": "APPROVED",
+      "category": "MARKETING",
+      "id": "1234159660829621",
+      "default_text": "",
+      "default_file": ""
+    }, {
+      "name": "files",
+      "components": [
+        {
+          "type": "HEADER",
+          "format": "DOCUMENT",
+          "example": {
+            "header_handle": []
+          }
+        },
+        {
+          "type": "BODY",
+          "text": "Hello, \\n{{1}}. \\n\\n*Simi Infotech Alerts*.",
+          "example": {
+            "body_text": [
+              [
+                "Welcome to simi Infotech"
+              ]
+            ]
+          }
+        }
+      ],
+      "language": "en_US",
+      "status": "APPROVED",
+      "category": "MARKETING",
+      "id": "739438117579441",
+      "default_text": "",
+      "default_file": ""
+    }, {
+      "name": "only_text",
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Hello, \\n{{1}}. \\n\\n*Simi Infotech Alerts*.",
+          "example": {
+            "body_text": [
+              [
+                "hello"
+              ]
+            ]
+          }
+        }
+      ],
+      "language": "en_US",
+      "status": "APPROVED",
+      "category": "MARKETING",
+      "id": "826005875438677",
+      "default_text": "",
+      "default_file": ""}], "msg_limit": "Unlimited"})
+    whatsapp_account_id = user.whatsapp_account_id
+    token = user.whatsapp_token
+    default_txt = user.templates.get("msg", "")
+    default_img = user.templates.get("img", "")
+    msg_limit = user.msg_limit
+    url = "https://graph.facebook.com/v15.0/%s/message_templates?access_token=%s" % (whatsapp_account_id, token)
+    res = requests.get(url).json()
+    for data in res.get("data"):
+        data["default_text"] = default_txt
+        data["default_file"] = default_img
+    return Response({"data": res.get("data"), "msg_limit": msg_limit})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def wa_send_message(request):
+    data_dict, template = {}, {}
+    data_url = ""
+    limit_remaining = 0
+    user = Userdata.objects.filter(user__id=request.user.id).last()
+    phone_id = user.whatsapp_phone_no_id
+    token = user.whatsapp_token
+    url = "https://graph.facebook.com/v15.0/%s/messages" % phone_id
+    limit = user.msg_limit
+    third_party_api = user.third_party_api
+    if limit < len(ast.literal_eval(request.data.get("phone_numbers"))):
+        return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("phone_numbers"))))
+    data = json.loads(request.data.get("data"))
+    if not (request.data.get("image") or request.data.get("video") or request.data.get("document")):
+        if data.get("default_file"):
+            data_url = data.get("default_file")
+    elif request.data.get("image") or request.data.get("video") or request.data.get("document"):
+        # user = Userdata.objects.filter(user__id=request.user.id).last()
+        user.template_img.delete()
+        user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
+        user.save()
+        # data_url = "https://king-prawn-app-4zv54.ondigitalocean.app" + user.template_img.url
+        data_url = "https://admin.simiinfotech.com" + user.template_img.url
+        print(data_url)
+    if data.get("components") and data.get("name") not in ["only_text", "text_with_image", "text_button_image"] and not third_party_api:
+        if data.get("components")[0].get('type') == 'HEADER':
+            types = data.get("components")[0].get("format")
+            if types == 'TEXT':
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")},
+                            "components": [{"type": "header", "parameters": [{"type": "text", "text": data.get('text')}]}]}
+            elif types == 'IMAGE':
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")},
+                            "components": [{"type": "header", "parameters": [{"type": "image", "image": {
+                                "link": data_url}}]}]}
+            elif types == 'VIDEO':
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")},
+                            "components": [{"type": "header", "parameters": [{"type": "video", "video": {
+                                "link": data_url}}]}]}
+            elif types == 'DOCUMENT':
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")},
+                            "components": [{"type": "header", "parameters": [{"type": "document", "document": {
+                                "link": data_url, "filename": data.get('filename')}}]}
+                                           ]}
+            else:
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")}}
+    if request.data.get("free_field_msg"):
+        text = request.data.get("free_field_msg")
+    else:
+        if data.get("default_text"):
+            text = data.get("default_text")
+        else:
+            text = ""
+    for numbers in ast.literal_eval(request.data.get("phone_numbers")):
+        if numbers in user.blocked_number:
+            continue
+        if third_party_api:
+            url = str(third_party_api) + "&receiverMobileNo=%s" % int(str(numbers))
+            if data.get("name") == "only_text":
+                resp = requests.get(url + "&message=%s" % text).json()
+            elif data.get("name") in ["text_with_image", "text_with_file"]:
+                resp = requests.get(url + "&message=%s&fileurl=%s" % (text, data_url)).json()
+            elif data.get("name") in ["files"]:
+                resp = requests.get(url + "&fileurl=%s" % data_url).json()
+            if resp.get("messages", ""):
+                if not cache.get("msg_%s_%s" % (phone_id, numbers)):
+                    cache.set("msg_%s_%s" % (phone_id, numbers), "success", 60 * 60 * 24)
+                    data_dict[str(numbers)] = "success"
+                    limit_remaining = limit - 1
+                    user.msg_limit = limit_remaining
+                    user.save()
+                else:
+                    data_dict[str(numbers)] = "success"
+            else:
+                data_dict[str(numbers)] = "error"
+            continue
+        else:
+            if data.get("name") in ["only_text", "text_with_image", "text_button_image", "text_with_video"]:
+                if data.get("name") == "only_text":
+                    payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
+                                          "type": "template", "template": {"name": "only_text", "language": {"code": "en_US"},
+                                                                           "components": [{"type": "body",
+                                                                                           "parameters": [{"type": "text",
+                                                                                                           "text": text}]}]
+                                                             }})
+                elif data.get("name") == "text_with_video":
+                    payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
+                                "type": "template",
+                                "template": {"name": data.get("name"), "language": {"code": "en_US"},
+                                             "components": [{"type": "header", "parameters": [{"type": "video",
+                                                                                               "video": {
+                                                                                                   "link": data_url}}]},
+                                                            {"type": "body", "parameters": [{"type": "text",
+                                                                                             "text": text}]}]
+                                             }})
+                else:
+                    payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
+                                          "type": "template",
+                                          "template": {"name": data.get("name"), "language": {"code": "en_US"},
+                                                       "components": [{"type": "header", "parameters": [{"type": "image",
+                                                                                                         "image": {"link": data_url}}]},
+                                                                      {"type": "body", "parameters": [{"type": "text",
+                                                                                                       "text": text}]}]
+                                                       }})
+            else:
+                payload = json.dumps({
+                  "messaging_product": "whatsapp",
+                  "to": int('91' + str(numbers)),
+                  "type": "template",
+                  "template": template
+                })
+            headers = {
+              'Authorization': 'Bearer %s' % token,
+              'Content-Type': 'application/json'
+            }
+            response = requests.request("POST", url, headers=headers, data=payload).json()
+            if response.get("messages"):
+                if response.get("messages")[0]:
+                    if response.get("messages")[0].get("id", ""):
+                        if not cache.get("msg_%s_%s" % (phone_id, numbers)):
+                            cache.set("msg_%s_%s" % (phone_id, numbers), "success", 60 * 60 * 24)
+                            data_dict[str(numbers)] = "success"
+                            limit_remaining = limit - 1
+                            user.msg_limit = limit_remaining
+                            user.save()
+                        else:
+                            data_dict[str(numbers)] = "success"
+            else:
+                data_dict[str(numbers)] = "error"
+    return Response(data_dict)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def wa_exchange_message(request):
+    data_dict, template = {}, {}
+    data_url = ""
+    user = Userdata.objects.filter(user__id=request.user.id).last()
+    phone_id = user.whatsapp_phone_no_id
+    token = user.whatsapp_token
+    url = "https://graph.facebook.com/v15.0/%s/messages" % phone_id
+    limit = user.msg_limit
+    msg = request.data.get("free_field_msg")
+    if limit < len(request.data):
+        return Response("Sorry only %s msg is remaining %s" % (limit, len(request.data.get("data"))))
+    data = json.loads(request.data.get("template_data"))
+    if not (request.data.get("image") or request.data.get("video") or request.data.get("document")):
+        if data.get("default_file"):
+            data_url = data.get("default_file")
+    elif request.data.get("image") or request.data.get("video") or request.data.get("document"):
+        # user = Userdata.objects.filter(user__id=request.user.id).last()
+        user.template_img.delete()
+        user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
+        user.save()
+        data_url = "https://admin.simiinfotech.com" + user.template_img.url
+        # data_url = "https://king-prawn-app-4zv54.ondigitalocean.app" + user.template_img.url
+        print(data_url)
+    if data.get("components") and data.get("name") not in ["only_text", "text_with_image", "text_button_image"]:
+        if data.get("components")[0].get('type') == 'HEADER':
+            types = data.get("components")[0].get("format")
+            if types == 'TEXT':
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")},
+                            "components": [
+                                {"type": "header", "parameters": [{"type": "text", "text": data.get('text')}]}]}
+            elif types == 'IMAGE':
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")},
+                            "components": [{"type": "header", "parameters": [{"type": "image", "image": {
+                                "link": data_url}}]}]}
+            elif types == 'VIDEO':
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")},
+                            "components": [{"type": "header", "parameters": [{"type": "video", "video": {
+                                "link": data_url}}]}]}
+            elif types == 'DOCUMENT':
+                a = urlparse(data_url)
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")},
+                            "components": [{"type": "header", "parameters": [{"type": "document", "document": {
+                                "link": data_url, "filename": os.path.basename(a.path)}}]}
+                                           ]}
+            else:
+                template = {"name": "%s" % data.get("name"), "language": {"code": "%s" % data.get("language")}}
+    for users in ast.literal_eval(request.data.get("data")):
+        numbers = users.get("K5")
+        if numbers in user.blocked_number:
+            continue
+        if msg.find("{{name}}") >= 0:
+            msg = msg.replace("{{name}}", users.get("K4"))
+        if msg.find("{{product}}") >= 0:
+            msg = msg.replace("{{product}}", users.get("K6"))
+        if msg.find("{{value}}") >= 0:
+            msg = msg.replace("{{value}}", users.get("exchage_value"))
+        if data.get("name") in ["only_text", "text_with_image", "text_button_image"]:
+            if data.get("name") == "only_text":
+                payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
+                                      "type": "template",
+                                      "template": {"name": "only_text", "language": {"code": "en_US"},
+                                                   "components": [{"type": "body",
+                                                                   "parameters": [{"type": "text",
+                                                                                   "text": msg}]}]
+                                                   }})
+            else:
+                payload = json.dumps({"messaging_product": "whatsapp", "to": int('91' + str(numbers)),
+                                      "type": "template",
+                                      "template": {"name": data.get("name"), "language": {"code": "en_US"},
+                                                   "components": [{"type": "header", "parameters": [{"type": "image",
+                                                                                                     "image": {
+                                                                                                         "link": data_url}}]},
+                                                                  {"type": "body", "parameters": [{"type": "text",
+                                                                                                   "text": msg}]}]
+                                                   }})
+        else:
+            payload = json.dumps({
+                "messaging_product": "whatsapp",
+                "to": int('91' + str(numbers)),
+                "type": "template",
+                "template": template
+            })
+        headers = {
+            'Authorization': 'Bearer %s' % token,
+            'Content-Type': 'application/json'
+        }
+        response = requests.request("POST", url, headers=headers, data=payload).json()
+        if response.get("messages"):
+            if response.get("messages")[0]:
+                if response.get("messages")[0].get("id", ""):
+                    if not cache.get("msg_%s_%s" % (phone_id, numbers)):
+                        cache.set("msg_%s_%s" % (phone_id, numbers), "success", 60 * 60 * 24)
+                        data_dict[str(numbers)] = "success"
+                        limit_remaining = limit - 1
+                        user.msg_limit = limit_remaining
+                        user.save()
+                    else:
+                        data_dict[str(numbers)] = "success"
+        else:
+            data_dict[str(numbers)] = "error"
+    return Response(data_dict)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def wa_default_data(request):
+    user = Userdata.objects.filter(user__id=request.user.id).last()
+    data_url = None
+    if request.data.get("image") or request.data.get("video") or request.data.get("document"):
+        # user = Userdata.objects.filter(user__id=request.user.id).last()
+        user.template_img.delete()
+        user.template_img = request.data.get('image', request.data.get("video", request.data.get("document")))
+        user.save()
+        # data_url = "https://king-prawn-app-4zv54.ondigitalocean.app" + user.template_img.url
+        data_url = "https://admin.simiinfotech.com/" + user.template_img.url
+    user.templates = {"msg": request.data.get("msg"), "img": data_url}
+    user.save()
+    return Response('Data saved successfully')
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def delete_all_my_data(request):
+    user = Userdata.objects.filter(user__id=request.user.id).last()
+    user.data = {}
+    user.save()
+    return Response(user.data)
